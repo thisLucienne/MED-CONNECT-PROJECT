@@ -1,55 +1,278 @@
-<div class="patients-page">
-  <div class="page-header">
-    <div class="title-group">
-      <h1>Gestion des Patients</h1>
-      <p class="subtitle">Consultez et gérez l'ensemble de vos patients Med-Connect.</p>
-    </div>
-    <div class="actions">
-      <div class="left-actions">
-        <input class="search" placeholder="Rechercher par nom, ID, pathologie..." [(ngModel)]="search" />
-        <button class="btn btn-outline">Filtres</button>
+<div class="patients-container">
+  <!-- Header -->
+  <header class="patients-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1>Mes Patients</h1>
+        <p class="subtitle">Gérez vos patients et accédez à leurs dossiers médicaux</p>
       </div>
-      <div class="right-actions">
-        <button class="btn btn-primary">Ajouter un Patient</button>
+      <div class="header-actions">
+        <button class="btn-add-patient" (click)="openAddPatient()">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/>
+          </svg>
+          Ajouter un Patient
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon patients">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ totalPatients }}</div>
+        <div class="stat-label">Total Patients</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon active">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ activePatients }}</div>
+        <div class="stat-label">Patients Actifs</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon pending">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ pendingRequests }}</div>
+        <div class="stat-label">Demandes en attente</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon urgent">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{ urgentCases }}</div>
+        <div class="stat-label">Cas Urgents</div>
       </div>
     </div>
   </div>
 
-  <div class="table-wrap">
-    <table class="patients-table">
-      <thead>
-        <tr>
-          <th><input type="checkbox" /></th>
-          <th>Patient</th>
-          <th>Âge</th>
-          <th>ID Patient</th>
-          <th>Dernière Consultation</th>
-          <th>Conditions</th>
-          <th>Statut</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let p of filtered">
-          <td><input type="checkbox" /></td>
-          <td class="patient-cell">
-            <img class="avatar-img" [src]="p.avatar" alt="{{ p.name }}" />
-            <div class="p-name">{{ p.name }}</div>
-          </td>
-          <td>{{ p.age }} ans</td>
-          <td>{{ p.id }}</td>
-          <td>{{ p.lastConsultation }}</td>
-          <td>
-            <span class="chip" *ngFor="let c of p.conditions">{{ c }}</span>
-          </td>
-          <td>
-            <span class="status" [ngClass]="{'urgent': p.status === 'Urgent', 'active': p.status === 'Actif'}">{{ p.status }}</span>
-          </td>
-          <td>
-            <button class="btn small">Voir</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Filters and Search -->
+  <div class="filters-section">
+    <div class="search-bar">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/>
+      </svg>
+      <input type="text" placeholder="Rechercher par nom, ID, pathologie..." [(ngModel)]="searchQuery" (input)="filterPatients()">
+    </div>
+
+    <div class="filter-buttons">
+      <button class="filter-btn" [class.active]="currentFilter === 'all'" (click)="setFilter('all')">
+        Tous ({{ totalPatients }})
+      </button>
+      <button class="filter-btn" [class.active]="currentFilter === 'active'" (click)="setFilter('active')">
+        Actifs ({{ activePatients }})
+      </button>
+      <button class="filter-btn" [class.active]="currentFilter === 'urgent'" (click)="setFilter('urgent')">
+        Urgents ({{ urgentCases }})
+      </button>
+      <button class="filter-btn" [class.active]="currentFilter === 'pending'" (click)="setFilter('pending')">
+        En attente ({{ pendingRequests }})
+      </button>
+    </div>
+
+    <div class="view-toggle">
+      <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="setViewMode('grid')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="view-btn" [class.active]="viewMode === 'list'" (click)="setViewMode('list')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Patients Grid View -->
+  <div class="patients-grid" *ngIf="viewMode === 'grid'">
+    @for (patient of filteredPatients; track patient.id) {
+      <div class="patient-card">
+        <div class="card-header">
+          <img [src]="patient.avatar" [alt]="patient.name" class="patient-avatar">
+          <span class="patient-status" [class.urgent]="patient.status === 'Urgent'" 
+                [class.active]="patient.status === 'Actif'"
+                [class.pending]="patient.status === 'En attente'">
+            {{ patient.status }}
+          </span>
+        </div>
+        <div class="card-body">
+          <h3 class="patient-name">{{ patient.name }}</h3>
+          <div class="patient-info">
+            <div class="info-item">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="currentColor"/>
+              </svg>
+              <span>{{ patient.age }} ans</span>
+            </div>
+            <div class="info-item">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" fill="currentColor"/>
+              </svg>
+              <span>{{ patient.id }}</span>
+            </div>
+          </div>
+          <div class="patient-conditions">
+            @for (condition of patient.conditions; track condition) {
+              <span class="condition-tag">{{ condition }}</span>
+            }
+          </div>
+          <div class="last-consultation">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" fill="currentColor"/>
+            </svg>
+            <span>Dernière consultation: {{ patient.lastConsultation }}</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="action-btn message" (click)="openMessage(patient)">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" fill="currentColor"/>
+            </svg>
+            Message
+          </button>
+          <button class="action-btn dossier" (click)="openDossier(patient)">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Patients List View -->
+  <div class="patients-list" *ngIf="viewMode === 'list'">
+    <div class="list-header">
+      <div class="col-checkbox">
+        <input type="checkbox" (change)="toggleSelectAll($event)">
+      </div>
+      <div class="col-patient">Patient</div>
+      <div class="col-age">Âge</div>
+      <div class="col-id">ID Patient</div>
+      <div class="col-consultation">Dernière Consultation</div>
+      <div class="col-conditions">Conditions</div>
+      <div class="col-status">Statut</div>
+      <div class="col-actions">Actions</div>
+    </div>
+
+    @for (patient of filteredPatients; track patient.id) {
+      <div class="list-row" [class.selected]="patient.selected">
+        <div class="col-checkbox">
+          <input type="checkbox" [(ngModel)]="patient.selected">
+        </div>
+        <div class="col-patient">
+          <img [src]="patient.avatar" [alt]="patient.name" class="patient-avatar-small">
+          <span class="patient-name-text">{{ patient.name }}</span>
+        </div>
+        <div class="col-age">{{ patient.age }} ans</div>
+        <div class="col-id">{{ patient.id }}</div>
+        <div class="col-consultation">{{ patient.lastConsultation }}</div>
+        <div class="col-conditions">
+          @for (condition of patient.conditions; track condition) {
+            <span class="condition-tag-small">{{ condition }}</span>
+          }
+        </div>
+        <div class="col-status">
+          <span class="status-badge" [class.urgent]="patient.status === 'Urgent'" 
+                [class.active]="patient.status === 'Actif'"
+                [class.pending]="patient.status === 'En attente'">
+            {{ patient.status }}
+          </span>
+        </div>
+        <div class="col-actions">
+          <button class="action-btn-small message" (click)="openMessage(patient)" title="Envoyer un message">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" fill="currentColor"/>
+            </svg>
+          </button>
+          <button class="action-btn-small dossier" (click)="openDossier(patient)" title="Voir le dossier">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredPatients.length === 0">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
+    </svg>
+    <h3>Aucun patient trouvé</h3>
+    <p>Essayez de modifier vos critères de recherche ou filtres</p>
+  </div>
+
+  <!-- Modal Ajouter Patient -->
+  <div class="modal-overlay" *ngIf="showAddPatientModal" (click)="closeAddPatient()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Demandes de Connexion</h2>
+        <button class="close-btn" (click)="closeAddPatient()">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-description">Patients ayant demandé une connexion avec vous</p>
+        @for (request of pendingPatientRequests; track request.id) {
+          <div class="request-card">
+            <img [src]="request.avatar" [alt]="request.name" class="request-avatar">
+            <div class="request-info">
+              <h4>{{ request.name }}</h4>
+              <p>{{ request.age }} ans • {{ request.reason }}</p>
+              <span class="request-date">Demande envoyée le {{ request.requestDate }}</span>
+            </div>
+            <div class="request-actions">
+              <button class="btn-accept" (click)="acceptPatient(request)">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/>
+                </svg>
+                Accepter
+              </button>
+              <button class="btn-reject" (click)="rejectPatient(request)">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                </svg>
+                Refuser
+              </button>
+            </div>
+          </div>
+        }
+        @if (pendingPatientRequests.length === 0) {
+          <div class="no-requests">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+            </svg>
+            <p>Aucune demande en attente</p>
+          </div>
+        }
+      </div>
+    </div>
   </div>
 </div>
