@@ -1,0 +1,296 @@
+<div class="dashboard-container">
+  <!-- Welcome Section -->
+  <div class="welcome-section">
+    <div class="welcome-content">
+      <h1>Bienvenue, Dr {{ doctorName }} 👋</h1>
+      <p class="welcome-subtitle">Voici un aperçu de votre activité aujourd'hui</p>
+      <div class="quick-stats">
+        <div class="quick-stat-item">
+          <span class="stat-value">{{ todayAppointments }}</span>
+          <span class="stat-label">RDV aujourd'hui</span>
+        </div>
+        <div class="quick-stat-item">
+          <span class="stat-value">{{ pendingMessages }}</span>
+          <span class="stat-label">Messages en attente</span>
+        </div>
+        <div class="quick-stat-item">
+          <span class="stat-value">{{ urgentCases }}</span>
+          <span class="stat-label">Cas urgents</span>
+        </div>
+      </div>
+    </div>
+    <div class="welcome-image">
+      <img src="assets/images/doc.jpg" alt="Doctor" />
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card primary">
+      <div class="stat-icon patients">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>Total Patients</h3>
+        <div class="stat-value">{{ totalPatients }}</div>
+        <div class="stat-change positive">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 14l5-5 5 5z" fill="currentColor"/>
+          </svg>
+          <span>+{{ patientGrowth }}% ce mois</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card success">
+      <div class="stat-icon consultations">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>Consultations</h3>
+        <div class="stat-value">{{ totalConsultations }}</div>
+        <div class="stat-change positive">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 14l5-5 5 5z" fill="currentColor"/>
+          </svg>
+          <span>+{{ consultationGrowth }}% ce mois</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card warning">
+      <div class="stat-icon dossiers">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>Dossiers Fermés</h3>
+        <div class="stat-value">{{ closedFiles }}</div>
+        <div class="stat-change">
+          <span>{{ closedFilesMonth }} ce mois</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card info">
+      <div class="stat-icon time">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <h3>Temps Actif</h3>
+        <div class="stat-value">{{ activeTime }}h</div>
+        <div class="stat-change">
+          <span>Cette semaine</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <!-- Patients par mois -->
+    <div class="chart-card large">
+      <div class="chart-header">
+        <h3>Patients Consultés par Mois</h3>
+        <select class="chart-filter">
+          <option>2024</option>
+          <option>2023</option>
+        </select>
+      </div>
+      <div class="chart-container">
+        <svg viewBox="0 0 800 300" class="bar-chart">
+          <!-- Axes -->
+          <line x1="50" y1="250" x2="750" y2="250" stroke="#e5e7eb" stroke-width="2"/>
+          <line x1="50" y1="50" x2="50" y2="250" stroke="#e5e7eb" stroke-width="2"/>
+          
+          <!-- Bars -->
+          @for (month of monthlyPatients; track month.name; let i = $index) {
+            <rect 
+              [attr.x]="70 + i * 60" 
+              [attr.y]="250 - month.value * 2" 
+              width="40" 
+              [attr.height]="month.value * 2" 
+              [attr.fill]="month.color"
+              rx="4"/>
+            <text 
+              [attr.x]="90 + i * 60" 
+              y="270" 
+              text-anchor="middle" 
+              font-size="12" 
+              fill="#6b7280">
+              {{ month.name }}
+            </text>
+            <text 
+              [attr.x]="90 + i * 60" 
+              [attr.y]="240 - month.value * 2" 
+              text-anchor="middle" 
+              font-size="14" 
+              font-weight="600" 
+              fill="#1f2937">
+              {{ month.value }}
+            </text>
+          }
+        </svg>
+      </div>
+    </div>
+
+    <!-- Pathologies -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Pathologies les Plus Rencontrées</h3>
+      </div>
+      <div class="pathologies-list">
+        @for (pathology of topPathologies; track pathology.name) {
+          <div class="pathology-item">
+            <div class="pathology-info">
+              <span class="pathology-name">{{ pathology.name }}</span>
+              <span class="pathology-count">{{ pathology.count }} cas</span>
+            </div>
+            <div class="pathology-bar">
+              <div class="pathology-progress" [style.width.%]="pathology.percentage" [style.background]="pathology.color"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Second Row Charts -->
+  <div class="charts-section">
+    <!-- Satisfaction patients -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Satisfaction Patients</h3>
+      </div>
+      <div class="satisfaction-content">
+        <div class="rating-display">
+          <div class="rating-value">{{ averageRating }}</div>
+          <div class="rating-stars">
+            @for (star of [1,2,3,4,5]; track star) {
+              <svg class="star" [class.filled]="star <= averageRating" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="currentColor"/>
+              </svg>
+            }
+          </div>
+          <div class="rating-count">{{ totalReviews }} avis</div>
+        </div>
+        <div class="rating-breakdown">
+          @for (rating of ratingBreakdown; track rating.stars) {
+            <div class="rating-row">
+              <span class="rating-label">{{ rating.stars }} ⭐</span>
+              <div class="rating-bar">
+                <div class="rating-fill" [style.width.%]="rating.percentage" [style.background]="rating.color"></div>
+              </div>
+              <span class="rating-percentage">{{ rating.percentage }}%</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Activité hebdomadaire -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Activité Hebdomadaire</h3>
+      </div>
+      <div class="chart-container">
+        <svg viewBox="0 0 400 250" class="line-chart">
+          <!-- Grid -->
+          @for (line of [0,1,2,3,4]; track line) {
+            <line 
+              x1="40" 
+              [attr.y1]="50 + line * 40" 
+              x2="360" 
+              [attr.y2]="50 + line * 40" 
+              stroke="#f3f4f6" 
+              stroke-width="1"/>
+          }
+          
+          <!-- Line -->
+          <polyline 
+            points="60,180 110,140 160,160 210,100 260,120 310,80" 
+            fill="none" 
+            stroke="#3b82f6" 
+            stroke-width="3"/>
+          
+          <!-- Points -->
+          @for (day of weeklyActivity; track day.name; let i = $index) {
+            <circle 
+              [attr.cx]="60 + i * 50" 
+              [attr.cy]="day.y" 
+              r="5" 
+              fill="#3b82f6"/>
+            <text 
+              [attr.x]="60 + i * 50" 
+              y="220" 
+              text-anchor="middle" 
+              font-size="12" 
+              fill="#6b7280">
+              {{ day.name }}
+            </text>
+          }
+        </svg>
+      </div>
+    </div>
+
+    <!-- Dossiers status -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>État des Dossiers</h3>
+      </div>
+      <div class="dossiers-stats">
+        @for (status of dossiersStatus; track status.label) {
+          <div class="dossier-stat-item">
+            <div class="dossier-icon" [style.background]="status.color">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="dossier-info">
+              <div class="dossier-value">{{ status.value }}</div>
+              <div class="dossier-label">{{ status.label }}</div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h3>Actions Rapides</h3>
+    <div class="actions-grid">
+      <button class="action-btn" (click)="navigateTo('/patients')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" fill="currentColor"/>
+        </svg>
+        <span>Voir Patients</span>
+      </button>
+      <button class="action-btn" (click)="navigateTo('/agenda')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z" fill="currentColor"/>
+        </svg>
+        <span>Agenda</span>
+      </button>
+      <button class="action-btn" (click)="navigateTo('/messages')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" fill="currentColor"/>
+        </svg>
+        <span>Messages</span>
+      </button>
+      <button class="action-btn" (click)="navigateTo('/dossiers')">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="currentColor"/>
+        </svg>
+        <span>Dossiers</span>
+      </button>
+    </div>
+  </div>
+</div>
