@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import SplashScreen from './src/components/SplashScreen';
 import LoginScreen from './src/components/LoginScreen';
+import RegisterScreen from './src/components/RegisterScreen';
 import DashboardScreen from './src/components/DashboardScreen';
 import MessagingList from './src/components/MessagingList';
 import ChatConversation from './src/components/ChatConversation';
 import ProfileScreen from './src/components/ProfileScreen';
-import RegisterScreen from './src/components/RegisterScreen';
+import MedicalRecordsScreen from './src/components/MedicalRecordsScreen';
+import UploadDocumentScreen from './src/components/UploadDocumentScreen';
+import FindDoctorScreen from './src/components/FindDoctorScreen';
+import DoctorProfileScreen from './src/components/DoctorProfileScreen';
 
 type Screen = 
   | 'splash'
@@ -15,37 +19,21 @@ type Screen =
   | 'dashboard'
   | 'messaging'
   | 'chat'
-  | 'profile';
-
-interface NavigationState {
-  currentScreen: Screen;
-  previousScreen: Screen | null;
-}
+  | 'profile'
+  | 'medicalRecords'
+  | 'uploadDocument'
+  | 'findDoctor'
+  | 'doctorProfile';
 
 export default function App() {
-  const [navigation, setNavigation] = useState<NavigationState>({
-    currentScreen: 'splash',
-    previousScreen: null,
-  });
+  const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
 
   const navigateTo = (screen: Screen) => {
-    setNavigation({
-      currentScreen: screen,
-      previousScreen: navigation.currentScreen,
-    });
-  };
-
-  const goBack = () => {
-    if (navigation.previousScreen) {
-      setNavigation({
-        currentScreen: navigation.previousScreen,
-        previousScreen: null,
-      });
-    }
+    setCurrentScreen(screen);
   };
 
   const renderScreen = () => {
-    switch (navigation.currentScreen) {
+    switch (currentScreen) {
       case 'splash':
         return <SplashScreen onStart={() => navigateTo('login')} />;
 
@@ -70,7 +58,10 @@ export default function App() {
           <DashboardScreen 
             onNavigateToMessages={() => navigateTo('messaging')}
             onNavigateToProfile={() => navigateTo('profile')}
+            onNavigateToRecords={() => navigateTo('medicalRecords')}
+            onNavigateToFindDoctor={() => navigateTo('findDoctor')}
             onLogout={() => navigateTo('login')}
+            onNavigateToDocument={() => navigateTo('uploadDocument')}
           />
         );
 
@@ -94,6 +85,46 @@ export default function App() {
           <ProfileScreen 
             onBack={() => navigateTo('dashboard')}
             onLogout={() => navigateTo('login')}
+          />
+        );
+
+      case 'medicalRecords':
+        return (
+          <MedicalRecordsScreen 
+            onBack={() => navigateTo('dashboard')}
+            onOpenRecord={(id) => alert(`Ouvrir dossier ${id}`)}
+            onCreateDocument={() => navigateTo('uploadDocument')}
+            onNavigateHome={() => navigateTo('dashboard')}
+            onNavigateToMessages={() => navigateTo('messaging')}
+            onNavigateToProfile={() => navigateTo('profile')}
+          />
+        );
+
+      case 'uploadDocument':
+        return (
+          <UploadDocumentScreen 
+            onBack={() => navigateTo('medicalRecords')}
+            onUpload={() => {
+              alert('Document enregistré !');
+              navigateTo('medicalRecords');
+            }}
+          />
+        );
+
+      case 'findDoctor':
+        return (
+          <FindDoctorScreen 
+            onBack={() => navigateTo('dashboard')}
+            onSelectDoctor={(id) => navigateTo('doctorProfile')}
+          />
+        );
+
+      case 'doctorProfile':
+        return (
+          <DoctorProfileScreen 
+            onBack={() => navigateTo('findDoctor')}
+            onMessage={() => navigateTo('chat')}
+            onCall={() => alert('Appel en cours...')}
           />
         );
 
