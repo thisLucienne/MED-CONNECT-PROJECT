@@ -1,0 +1,1 @@
+ALTER TABLE "two_factor_codes" ALTER COLUMN "code" SET DATA TYPE varchar(4);

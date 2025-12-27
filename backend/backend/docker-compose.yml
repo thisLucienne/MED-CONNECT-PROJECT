@@ -1,0 +1,86 @@
+services:
+  # Service PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: med-connect-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-medconnect}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-medconnect123}
+      POSTGRES_DB: ${DB_NAME:-medconnect}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - med-connect-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-medconnect}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Service Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: med-connect-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-5000}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-medconnect}
+      DB_PASSWORD: ${DB_PASSWORD:-medconnect123}
+      DB_NAME: ${DB_NAME:-medconnect}
+      DB_USE_SSL: ${DB_USE_SSL:-false}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      # Applications mobiles (Expo/React Native)
+      ALLOW_MOBILE_APPS: ${ALLOW_MOBILE_APPS:-true}
+      # Variables Cloudinary (si utilisées)
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      # Variables Email (si utilisées)
+      EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USER: ${EMAIL_USER:-}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Med Connect <noreply@medconnect.com>}
+      # Admin par défaut
+      DEFAULT_ADMIN_EMAIL: ${DEFAULT_ADMIN_EMAIL:-admin@medconnect.com}
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-}
+      # Sécurité
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      "2FA_CODE_EXPIRY_MINUTES": $${2FA_CODE_EXPIRY_MINUTES:-10}
+      MAX_LOGIN_ATTEMPTS: ${MAX_LOGIN_ATTEMPTS:-3}
+      LOCKOUT_TIME_MINUTES: ${LOCKOUT_TIME_MINUTES:-30}
+    ports:
+      - "${PORT:-5000}:5000"
+    volumes:
+      - ./assets:/app/assets
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - med-connect-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  med-connect-network:
+    driver: bridge
+

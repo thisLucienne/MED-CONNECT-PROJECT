@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidature reçue - Med Connect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            margin-bottom: 20px;
+        }
+        .logo img {
+            height: 60px;
+            width: auto;
+        }
+        .title {
+            color: #1C74BC;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .confirmation-badge {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #17a2b8;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .doctor-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .process-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .timeline {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #1C74BC;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="cid:logo" alt="Med Connect" style="height: 60px; width: auto;">
+            </div>
+            <h1 class="title">Candidature reçue</h1>
+        </div>
+        
+        <div class="content">
+            <p>Bonjour <strong>Dr {{firstName}} {{lastName}}</strong>,</p>
+            
+            <div class="confirmation-badge">
+                <h3><i class="fas fa-check-circle" style="color: #0c5460; margin-right: 8px;"></i>Votre candidature a été reçue avec succès !</h3>
+                <p>Merci de votre intérêt pour rejoindre la plateforme Med Connect.</p>
+            </div>
+            
+            <div class="doctor-info">
+                <h4><i class="fas fa-clipboard-list" style="color: #1C74BC; margin-right: 8px;"></i>Récapitulatif de votre candidature :</h4>
+                <p><strong>Nom :</strong> Dr {{firstName}} {{lastName}}</p>
+                <p><strong>Email :</strong> {{email}}</p>
+                <p><strong>Spécialité :</strong> {{specialty}}</p>
+                <p><strong>Numéro d'ordre :</strong> {{licenseNumber}}</p>
+                <p><strong>Date de candidature :</strong> {{applicationDate}}</p>
+                <p><strong>Statut :</strong> <span style="color: #856404; font-weight: bold;">En attente de validation</span></p>
+            </div>
+            
+            <div class="process-info">
+                <h4>Processus de validation :</h4>
+                <p>Votre candidature va maintenant être examinée par notre équipe administrative. Nous procédons à une vérification manuelle de :</p>
+                <ul>
+                    <li>Votre identité professionnelle</li>
+                    <li>Votre numéro d'ordre au conseil de l'ordre des médecins</li>
+                    <li>Votre spécialité médicale</li>
+                    <li>La cohérence de vos informations</li>
+                </ul>
+            </div>
+            
+            <div class="timeline">
+                <h4>Délais de traitement :</h4>
+                <ul>
+                    <li><strong>Examen initial :</strong> 24-48 heures</li>
+                    <li><strong>Vérification approfondie :</strong> 2-5 jours ouvrés</li>
+                    <li><strong>Décision finale :</strong> Vous serez notifié par email</li>
+                </ul>
+            </div>
+            
+            <p><strong>Que se passe-t-il ensuite ?</strong></p>
+            <ul>
+                <li>Vous recevrez un email de confirmation une fois la validation terminée</li>
+                <li>Si approuvée, vous pourrez vous connecter avec l'authentification 2FA</li>
+                <li>Si rejetée, nous vous expliquerons les raisons et les étapes pour corriger</li>
+            </ul>
+            
+            <p>Nous vous remercions de votre patience pendant ce processus de validation qui nous permet de maintenir la qualité et la sécurité de notre plateforme.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Merci de faire confiance à Med Connect</p>
+            <p>L'équipe Med Connect</p>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+            <p style="font-size: 12px; color: #999;">
+                Cet email a été envoyé automatiquement, merci de ne pas y répondre.<br>
+                Si vous avez des questions, contactez notre support.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouvelle candidature médecin - Med Connect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            margin-bottom: 20px;
+        }
+        .logo img {
+            height: 60px;
+            width: auto;
+        }
+        .title {
+            color: #dc3545;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .alert-badge {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #dc3545;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .doctor-details {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+        }
+        .action-required {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #dc3545;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            text-align: center;
+        }
+        .button.approve {
+            background-color: #28a745;
+        }
+        .button.review {
+            background-color: #1C74BC;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="cid:logo" alt="Med Connect" style="height: 60px; width: auto;">
+            </div>
+            <h1 class="title"><i class="fas fa-exclamation-triangle" style="color: #dc3545; margin-right: 10px;"></i>Nouvelle candidature médecin</h1>
+        </div>
+        
+        <div class="content">
+            <p>Bonjour <strong>Administrateur</strong>,</p>
+            
+            <div class="alert-badge">
+                <h3><i class="fas fa-clipboard-check" style="color: #721c24; margin-right: 8px;"></i>Action requise : Validation de candidature</h3>
+                <p>Une nouvelle candidature de médecin nécessite votre validation.</p>
+            </div>
+            
+            <div class="doctor-details">
+                <h4><i class="fas fa-user-md" style="color: #1C74BC; margin-right: 8px;"></i>Détails du candidat :</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 8px; font-weight: bold; width: 30%;">Nom complet :</td>
+                        <td style="padding: 8px;">Dr {{firstName}} {{lastName}}</td>
+                    </tr>
+                    <tr style="background-color: #f8f9fa;">
+                        <td style="padding: 8px; font-weight: bold;">Email :</td>
+                        <td style="padding: 8px;">{{email}}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-weight: bold;">Téléphone :</td>
+                        <td style="padding: 8px;">{{phone}}</td>
+                    </tr>
+                    <tr style="background-color: #f8f9fa;">
+                        <td style="padding: 8px; font-weight: bold;">Spécialité :</td>
+                        <td style="padding: 8px;">{{specialty}}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; font-weight: bold;">N° d'ordre :</td>
+                        <td style="padding: 8px; color: #dc3545; font-weight: bold;">{{licenseNumber}}</td>
+                    </tr>
+                    <tr style="background-color: #f8f9fa;">
+                        <td style="padding: 8px; font-weight: bold;">Date candidature :</td>
+                        <td style="padding: 8px;">{{applicationDate}}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="action-required">
+                <h4><i class="fas fa-tasks" style="color: #856404; margin-right: 8px;"></i>Actions à effectuer :</h4></i>
+                <ol>
+                    <li><strong>Vérifier l'identité :</strong> Confirmer que le nom correspond au numéro d'ordre</li>
+                    <li><strong>Valider le numéro d'ordre :</strong> Vérifier auprès du conseil de l'ordre des médecins</li>
+                    <li><strong>Contrôler la spécialité :</strong> S'assurer que la spécialité est correcte</li>
+                    <li><strong>Prendre une décision :</strong> Approuver ou rejeter la candidature</li>
+                </ol>
+            </div>
+            
+            <p><strong><i class="fas fa-search" style="color: #1C74BC; margin-right: 8px;"></i>Points de vérification importants :</strong></p>
+            <ul>
+                <li>Le numéro d'ordre doit être valide et actif</li>
+                <li>La spécialité doit correspondre aux registres officiels</li>
+                <li>L'email doit être professionnel si possible</li>
+                <li>Vérifier qu'il n'y a pas de doublons dans le système</li>
+            </ul>
+            
+           
+            
+            <p><strong><i class="fas fa-clock" style="color: #dc3545; margin-right: 8px;"></i>Délai de traitement recommandé :</strong> 24-48 heures maximum</p>
+        </div>
+        
+        <div class="footer">
+            <p>Système de notification Med Connect</p>
+            <p>Panel d'administration</p>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+            <p style="font-size: 12px; color: #999;">
+                Cet email a été envoyé automatiquement par le système.<br>
+                Connectez-vous au panel d'administration pour traiter cette candidature.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
