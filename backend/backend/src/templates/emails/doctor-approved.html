@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidature approuvée - Med Connect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            margin-bottom: 20px;
+        }
+        .logo img {
+            height: 60px;
+            width: auto;
+        }
+        .title {
+            color: #28a745;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .success-badge {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .doctor-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .next-steps {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #1C74BC;
+            margin: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="cid:logo" alt="Med Connect" style="height: 60px; width: auto;">
+            </div>
+            <h1 class="title"><i class="fas fa-check-circle" style="color: #28a745; margin-right: 10px;"></i>Candidature Approuvée !</h1>
+        </div>
+        
+        <div class="content">
+            <p>Félicitations <strong>Dr {{firstName}} {{lastName}}</strong> !</p>
+            
+            <div class="success-badge">
+                <h3><i class="fas fa-party-horn" style="color: #28a745; margin-right: 8px;"></i>Votre candidature a été approuvée avec succès !</h3>
+                <p>Vous pouvez maintenant accéder à la plateforme Med Connect en tant que médecin.</p>
+            </div>
+            
+            <div class="doctor-info">
+                <h4><i class="fas fa-clipboard-list" style="color: #1C74BC; margin-right: 8px;"></i>Informations de votre profil :</h4>
+                <p><strong>Nom :</strong> Dr {{firstName}} {{lastName}}</p>
+                <p><strong>Email :</strong> {{email}}</p>
+                <p><strong>Spécialité :</strong> {{specialty}}</p>
+                <p><strong>Numéro d'ordre :</strong> {{licenseNumber}}</p>
+                <p><strong>Date d'approbation :</strong> {{approvalDate}}</p>
+                <p><strong>Approuvé par :</strong> {{approverName}}</p>
+            </div>
+            
+            <div class="next-steps">
+                <h4><i class="fas fa-rocket" style="color: #1C74BC; margin-right: 8px;"></i>Prochaines étapes :</h4>
+                <ol>
+                    <li><strong>Connexion :</strong> Connectez-vous avec votre email et mot de passe</li>
+                    <li><strong>2FA :</strong> Vous recevrez un code de vérification par email</li>
+                    <li><strong>Profil :</strong> Complétez votre profil médecin</li>
+                    <li><strong>Patients :</strong> Commencez à gérer vos patients</li>
+                </ol>
+            </div>
+            
+            <p>Avec Med Connect, vous pouvez :</p>
+            <ul>
+                <li><i class="fas fa-users" style="color: #1C74BC; margin-right: 8px;"></i>Gérer vos patients</li>
+                <li><i class="fas fa-calendar-alt" style="color: #1C74BC; margin-right: 8px;"></i>Organiser vos rendez-vous</li>
+                <li><i class="fas fa-file-medical" style="color: #1C74BC; margin-right: 8px;"></i>Accéder aux dossiers médicaux</li>
+                <li><i class="fas fa-prescription-bottle-alt" style="color: #1C74BC; margin-right: 8px;"></i>Prescrire des traitements</li>
+                <li><i class="fas fa-chart-line" style="color: #1C74BC; margin-right: 8px;"></i>Suivre l'évolution de vos patients</li>
+            </ul>
+            
+            <div style="text-align: center;">
+                <a href="#" class="button">Se connecter à Med Connect</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Bienvenue dans l'équipe Med Connect !</p>
+            <p>L'équipe Med Connect</p>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+            <p style="font-size: 12px; color: #999;">
+                Cet email a été envoyé automatiquement, merci de ne pas y répondre.<br>
+                Si vous avez des questions, contactez notre support.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
