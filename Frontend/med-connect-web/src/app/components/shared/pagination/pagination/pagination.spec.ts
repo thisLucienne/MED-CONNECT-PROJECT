@@ -1,24 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Messagerie } from './messagerie';
+import { Pagination } from './pagination';
 
-describe('Messagerie', () => {
-  let component: Messagerie;
-  let fixture: ComponentFixture<Messagerie>;
+describe('Pagination', () => {
+  let component: Pagination;
+  let fixture: ComponentFixture<Pagination>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Messagerie]
+      imports: [Pagination]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(Messagerie);
+    fixture = TestBed.createComponent(Pagination);
     component = fixture.componentInstance;
-<<<<<<< HEAD
     fixture.detectChanges();
-=======
-    await fixture.whenStable();
->>>>>>> frontend_admin
   });
 
   it('should create', () => {

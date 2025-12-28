@@ -1,24 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Messagerie } from './messagerie';
+import { Dossiers } from './dossiers';
 
-describe('Messagerie', () => {
-  let component: Messagerie;
-  let fixture: ComponentFixture<Messagerie>;
+describe('Dossiers', () => {
+  let component: Dossiers;
+  let fixture: ComponentFixture<Dossiers>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Messagerie]
+      imports: [Dossiers]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(Messagerie);
+    fixture = TestBed.createComponent(Dossiers);
     component = fixture.componentInstance;
-<<<<<<< HEAD
-    fixture.detectChanges();
-=======
     await fixture.whenStable();
->>>>>>> frontend_admin
   });
 
   it('should create', () => {

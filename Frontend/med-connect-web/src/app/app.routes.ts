@@ -12,8 +12,21 @@ export const routes: Routes = [
   { path: 'patients', component: PatientDComponent },
   { path: 'agenda', component: Agenda },
   { path: 'messages', component: Messagerie },
-  { path: 'dossiers', component: DashboardComponent }, // À remplacer par le composant dossiers
-  { path: 'statistics', component: DashboardComponent }, // À remplacer par le composant statistiques
-  { path: 'settings', component: DashboardComponent }, // À remplacer par le composant paramètres
+  {
+    path: 'medecins',
+    loadComponent: () => import('./components/medecins/medecins').then(m => m.MedecinsComponent)
+  },
+  {
+    path: 'dossiers',
+    loadComponent: () => import('./components/dossiers/dossiers').then(m => m.DossiersComponent)
+  },
+  {
+    path: 'messagerie',
+    loadComponent: () => import('./components/messagerie/messagerie').then(m => m.MessagerieComponent)
+  },
+  {
+    path: 'parametres',
+    loadComponent: () => import('./components/parametres/parametres').then(m => m.ParametresComponent)
+  },
   { path: '**', redirectTo: '/login' }
 ];

@@ -1,12 +1,14 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
+import { SidebarComponent } from './components/layout/sidebar/sidebar';
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavbarComponent, CommonModule],
+  standalone: true,
+  imports: [RouterOutlet, NavbarComponent, SidebarComponent, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
