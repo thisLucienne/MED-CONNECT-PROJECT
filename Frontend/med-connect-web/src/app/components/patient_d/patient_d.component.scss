@@ -1,0 +1,38 @@
+.patients-page {
+  margin-left: 280px; /* leave space for sidebar */
+  padding: 32px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  color: #333;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.title-group h1 {
+  margin: 0 0 6px 0;
+  font-size: 20px;
+  color: #223;
+}
+.subtitle { margin: 0; color: #6b7280; font-size: 13px }
+
+.actions { display: flex; gap: 12px; align-items: center }
+.search { padding: 8px 12px; border-radius: 6px; border: 1px solid #e5e7eb; width: 360px }
+.btn { padding: 8px 12px; border-radius: 8px; border: none; cursor: pointer }
+.btn-primary { background: #2b90ff; color: white }
+.btn.small { padding: 6px 10px; font-size: 13px }
+
+.table-wrap { background: white; border-radius: 8px; padding: 12px; box-shadow: 0 1px 2px rgba(16,24,40,0.03) }
+.patients-table { width: 100%; border-collapse: collapse }
+.patients-table thead th { text-align: left; padding: 12px 8px; color: #6b7280; font-size: 13px }
+.patients-table tbody td { padding: 12px 8px; border-top: 1px solid #f3f4f6; vertical-align: middle }
+
+.patient-cell { display: flex; align-items: center; gap: 12px }
+.avatar-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; display:block }
++.chip { display:inline-block; background:#eef2ff; color:#2563eb; padding:4px 8px; border-radius:999px; font-size:12px; margin-right:6px }
+.status { padding:6px 10px; border-radius:12px; font-size:12px }
+.status.urgent { background:#fff1f0; color:#b91c1c }
+.status.active { background:#ecfdf5; color:#059669 }
