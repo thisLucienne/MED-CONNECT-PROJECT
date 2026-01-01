@@ -14,11 +14,7 @@ describe('Messagerie', () => {
 
     fixture = TestBed.createComponent(Messagerie);
     component = fixture.componentInstance;
-<<<<<<< HEAD
     fixture.detectChanges();
-=======
-    await fixture.whenStable();
->>>>>>> frontend_admin
   });
 
   it('should create', () => {
