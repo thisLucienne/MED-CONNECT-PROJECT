@@ -13,12 +13,17 @@ import { Ionicons } from '@expo/vector-icons';
 interface DashboardScreenProps {
   onNavigateToMessages: () => void;
   onNavigateToProfile: () => void;
+  onNavigateToRecords: () => void;
+  onNavigateToFindDoctor: () => void;
+  onNavigateToDocument: () => void;
   onLogout: () => void;
 }
 
 const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onNavigateToMessages,
   onNavigateToProfile,
+  onNavigateToRecords,
+  onNavigateToFindDoctor,
   onLogout,
 }) => {
   return (
@@ -26,60 +31,66 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       <StatusBar barStyle="light-content" />
       
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
+        {/* Header Bleu */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            <TouchableOpacity onPress={onNavigateToProfile} style={styles.avatar}>
-              <Text style={styles.avatarText}>MD</Text>
-            </TouchableOpacity>
-            <View style={styles.headerInfo}>
-              <Text style={styles.userName}>Marie Dubois</Text>
-              <Text style={styles.userId}>34 ans • ID: MD-3647</Text>
+            <View style={styles.userInfo}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>MD</Text>
+              </View>
+              <View style={styles.userDetails}>
+                <Text style={styles.userName}>Marie Dubois</Text>
+                <Text style={styles.userId}>34 ans • ID: MD-3647</Text>
+              </View>
             </View>
-            <TouchableOpacity style={styles.settingsButton}>
+            <TouchableOpacity style={styles.settingsButton} onPress={onNavigateToProfile}>
               <Ionicons name="settings-outline" size={24} color="white" />
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.content}>
+        {/* Contenu principal */}
+        <View style={styles.mainContent}>
           {/* Informations essentielles */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Informations essentielles</Text>
             
-            <View style={styles.infoGrid}>
+            <View style={styles.infoRow}>
+              {/* Allergies */}
               <View style={[styles.infoCard, styles.allergyCard]}>
-                <View style={styles.infoCardHeader}>
-                  <Ionicons name="warning" size={16} color="#f97316" />
-                  <Text style={styles.infoCardTitle}>Allergies</Text>
-                  <View style={styles.badge}>
+                <View style={styles.infoHeader}>
+                  <Ionicons name="warning" size={18} color="#f97316" />
+                  <Text style={styles.infoTitle}>Allergies</Text>
+                  <View style={[styles.badge, styles.badgeOrange]}>
                     <Text style={styles.badgeText}>2</Text>
                   </View>
                 </View>
-                <Text style={styles.infoCardText}>Pénicilline, Arachides</Text>
+                <Text style={styles.infoText}>Pénicilline, Arachides</Text>
               </View>
 
+              {/* Médicaments */}
               <View style={[styles.infoCard, styles.medicationCard]}>
-                <View style={styles.infoCardHeader}>
-                  <Ionicons name="medical" size={16} color="#10b981" />
-                  <Text style={styles.infoCardTitle}>Médicaments</Text>
+                <View style={styles.infoHeader}>
+                  <Ionicons name="medkit" size={18} color="#10b981" />
+                  <Text style={styles.infoTitle}>Médicaments</Text>
                   <View style={[styles.badge, styles.badgeGreen]}>
                     <Text style={styles.badgeText}>3</Text>
                   </View>
                 </View>
-                <Text style={styles.infoCardText}>Aspirine 100mg, Euthryrox 75μg</Text>
+                <Text style={styles.infoText}>Aspirine 100mg, Euthryrox 75μg</Text>
               </View>
             </View>
 
-            <View style={[styles.infoCard, styles.conditionCard]}>
-              <View style={styles.infoCardHeader}>
-                <Ionicons name="heart" size={16} color="#3b82f6" />
-                <Text style={styles.infoCardTitle}>Conditions</Text>
+            {/* Conditions */}
+            <View style={[styles.infoCard, styles.conditionCard, styles.fullWidth]}>
+              <View style={styles.infoHeader}>
+                <Ionicons name="heart" size={18} color="#3b82f6" />
+                <Text style={styles.infoTitle}>Conditions</Text>
                 <View style={[styles.badge, styles.badgeBlue]}>
                   <Text style={styles.badgeText}>?</Text>
                 </View>
               </View>
-              <Text style={styles.infoCardText}>Hypothyroïdie, Migraine chronique</Text>
+              <Text style={styles.infoText}>Hypothyroïdie, Migraine chronique</Text>
             </View>
           </View>
 
@@ -88,71 +99,85 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <Text style={styles.sectionTitle}>Accès rapide</Text>
             
             <View style={styles.quickAccessGrid}>
-              <TouchableOpacity style={[styles.quickAccessCard, styles.quickAccessBlue]}>
-                <View style={styles.iconBadge}>
-                  <Ionicons name="document-text" size={24} color="#3b82f6" />
-                  <View style={styles.notificationBadge}>
+              {/* Dossiers médicaux */}
+              <TouchableOpacity 
+                style={[styles.quickAccessCard, styles.cardBlue]} 
+                onPress={onNavigateToRecords}
+              >
+                <View style={styles.cardIconContainer}>
+                  <Ionicons name="document-text" size={32} color="#3b82f6" />
+                  <View style={[styles.notificationBadge, styles.badgeBlueNotif]}>
                     <Text style={styles.notificationText}>14</Text>
                   </View>
                 </View>
-                <Text style={styles.quickAccessText}>Dossiers médicaux</Text>
+                <Text style={styles.cardTitle}>Dossiers médicaux</Text>
               </TouchableOpacity>
 
+              {/* Messagerie */}
               <TouchableOpacity 
-                style={[styles.quickAccessCard, styles.quickAccessPurple]}
+                style={[styles.quickAccessCard, styles.cardPurple]} 
                 onPress={onNavigateToMessages}
               >
-                <View style={styles.iconBadge}>
-                  <Ionicons name="chatbubble" size={24} color="#8b5cf6" />
-                  <View style={[styles.notificationBadge, styles.notificationBadgeRed]}>
+                <View style={styles.cardIconContainer}>
+                  <Ionicons name="chatbubble-ellipses" size={32} color="#8b5cf6" />
+                  <View style={[styles.notificationBadge, styles.badgeRed]}>
                     <Text style={styles.notificationText}>3</Text>
                   </View>
                 </View>
-                <Text style={styles.quickAccessText}>Messagerie</Text>
+                <Text style={styles.cardTitle}>Messagerie</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.quickAccessCard, styles.quickAccessGreen]}>
-                <View style={styles.iconBadge}>
-                  <Ionicons name="people" size={24} color="#10b981" />
-                  <View style={[styles.notificationBadge, styles.notificationBadgeGray]}>
+              {/* Mes médecins */}
+              <TouchableOpacity 
+                style={[styles.quickAccessCard, styles.cardTeal]} 
+                onPress={onNavigateToFindDoctor}
+              >
+                <View style={styles.cardIconContainer}>
+                  <Ionicons name="people" size={32} color="#14b8a6" />
+                  <View style={[styles.notificationBadge, styles.badgeGray]}>
                     <Text style={styles.notificationText}>5</Text>
                   </View>
                 </View>
-                <Text style={styles.quickAccessText}>Mes médecins</Text>
+                <Text style={styles.cardTitle}>Mes médecins</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.quickAccessCard, styles.quickAccessIndigo]}>
-                <View style={styles.iconBadge}>
-                  <Ionicons name="flask" size={24} color="#6366f1" />
-                  <View style={[styles.notificationBadge, styles.notificationBadgeBlue]}>
+              {/* Résultats labo */}
+              <TouchableOpacity style={[styles.quickAccessCard, styles.cardIndigo]}>
+                <View style={styles.cardIconContainer}>
+                  <Ionicons name="flask" size={32} color="#6366f1" />
+                  <View style={[styles.notificationBadge, styles.badgeBlueNotif]}>
                     <Text style={styles.notificationText}>?</Text>
                   </View>
                 </View>
-                <Text style={styles.quickAccessText}>Résultats labo</Text>
+                <Text style={styles.cardTitle}>Résultats labo</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
-        {/* Espace pour le FAB et bottom nav */}
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Floating Action Button */}
-      <TouchableOpacity style={styles.fab}>
-        <Ionicons name="add" size={28} color="white" />
+      {/* Bouton FAB Vert */}
+      <TouchableOpacity style={styles.fab} >
+        <Ionicons name="add" size={32} color="white" />
       </TouchableOpacity>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation - 5 items */}
       <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="home" size={24} color="#3b82f6" />
+          <Ionicons name="home" size={26} color="#3b82f6" />
           <Text style={[styles.navText, styles.navTextActive]}>Accueil</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.navItem} onPress={onNavigateToRecords}>
+          <Ionicons name="document-text-outline" size={26} color="#9ca3af" />
+          <Text style={styles.navText}>Dossiers</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.navItem} onPress={onNavigateToMessages}>
-          <View>
-            <Ionicons name="chatbubble-outline" size={24} color="#9ca3af" />
+          <View style={styles.navIconWrapper}>
+            <Ionicons name="chatbubble-outline" size={26} color="#9ca3af" />
             <View style={styles.navBadge}>
               <Text style={styles.navBadgeText}>3</Text>
             </View>
@@ -161,13 +186,13 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="notifications-outline" size={24} color="#9ca3af" />
+          <Ionicons name="notifications-outline" size={26} color="#9ca3af" />
           <Text style={styles.navText}>Activité</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem} onPress={onNavigateToProfile}>
-          <Ionicons name="menu-outline" size={24} color="#9ca3af" />
-          <Text style={styles.navText}>Plus</Text>
+          <Ionicons name="person-outline" size={26} color="#9ca3af" />
+          <Text style={styles.navText}>Profil</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -177,72 +202,82 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#f3f4f6',
   },
   header: {
     backgroundColor: '#3b82f6',
+    paddingTop: 16,
+    paddingBottom: 24,
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
   },
   headerContent: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   avatar: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     backgroundColor: 'white',
-    borderRadius: 24,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   avatarText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#3b82f6',
   },
-  headerInfo: {
+  userDetails: {
     flex: 1,
   },
   userName: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: 'bold',
     color: 'white',
+    marginBottom: 2,
   },
   userId: {
-    fontSize: 12,
+    fontSize: 13,
     color: 'rgba(255, 255, 255, 0.9)',
   },
   settingsButton: {
     padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
   },
-  content: {
+  mainContent: {
     padding: 16,
-    marginTop: -16,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 28,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
+    fontSize: 19,
+    fontWeight: '700',
+    color: '#111827',
     marginBottom: 16,
   },
-  infoGrid: {
+  infoRow: {
     flexDirection: 'row',
     gap: 12,
     marginBottom: 12,
   },
   infoCard: {
     flex: 1,
-    padding: 12,
-    borderRadius: 12,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 14,
     borderWidth: 1,
+  },
+  fullWidth: {
+    width: '100%',
   },
   allergyCard: {
     backgroundColor: '#fff7ed',
@@ -256,23 +291,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#eff6ff',
     borderColor: '#bfdbfe',
   },
-  infoCardHeader: {
+  infoHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  infoCardTitle: {
-    fontSize: 12,
+  infoTitle: {
+    fontSize: 13,
     fontWeight: '600',
-    marginLeft: 6,
-    flex: 1,
     color: '#374151',
+    marginLeft: 8,
+    flex: 1,
   },
   badge: {
-    backgroundColor: '#f97316',
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    minWidth: 24,
+    alignItems: 'center',
+  },
+  badgeOrange: {
+    backgroundColor: '#f97316',
   },
   badgeGreen: {
     backgroundColor: '#10b981',
@@ -282,12 +321,13 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: 'bold',
   },
-  infoCardText: {
-    fontSize: 11,
+  infoText: {
+    fontSize: 12,
     color: '#6b7280',
+    lineHeight: 18,
   },
   quickAccessGrid: {
     flexDirection: 'row',
@@ -296,95 +336,101 @@ const styles = StyleSheet.create({
   },
   quickAccessCard: {
     width: '48%',
-    padding: 16,
     borderRadius: 16,
+    padding: 20,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 130,
   },
-  quickAccessBlue: {
+  cardBlue: {
     backgroundColor: '#eff6ff',
   },
-  quickAccessPurple: {
+  cardPurple: {
     backgroundColor: '#f5f3ff',
   },
-  quickAccessGreen: {
-    backgroundColor: '#f0fdf4',
+  cardTeal: {
+    backgroundColor: '#f0fdfa',
   },
-  quickAccessIndigo: {
+  cardIndigo: {
     backgroundColor: '#eef2ff',
   },
-  iconBadge: {
+  cardIconContainer: {
     position: 'relative',
     marginBottom: 12,
   },
   notificationBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#3b82f6',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    top: -6,
+    right: -6,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 6,
   },
-  notificationBadgeRed: {
+  badgeBlueNotif: {
+    backgroundColor: '#3b82f6',
+  },
+  badgeRed: {
     backgroundColor: '#ef4444',
   },
-  notificationBadgeGray: {
+  badgeGray: {
     backgroundColor: '#6b7280',
-  },
-  notificationBadgeBlue: {
-    backgroundColor: '#3b82f6',
   },
   notificationText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: 'bold',
   },
-  quickAccessText: {
-    fontSize: 13,
-    fontWeight: '500',
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '600',
     color: '#374151',
     textAlign: 'center',
   },
   fab: {
     position: 'absolute',
-    bottom: 90,
-    right: 24,
-    width: 56,
-    height: 56,
+    bottom: 100,
+    right: 20,
+    width: 60,
+    height: 60,
     backgroundColor: '#10b981',
-    borderRadius: 28,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: 10,
     elevation: 8,
   },
   bottomNav: {
     flexDirection: 'row',
     backgroundColor: 'white',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     borderTopWidth: 1,
     borderTopColor: '#e5e7eb',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
+    shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 10,
   },
   navItem: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navIconWrapper: {
+    position: 'relative',
   },
   navText: {
     fontSize: 11,
     color: '#9ca3af',
     marginTop: 4,
+    fontWeight: '500',
   },
   navTextActive: {
     color: '#3b82f6',
@@ -392,19 +438,19 @@ const styles = StyleSheet.create({
   },
   navBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -6,
+    right: -8,
     backgroundColor: '#ef4444',
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 4,
   },
   navBadgeText: {
     color: 'white',
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 'bold',
   },
 });

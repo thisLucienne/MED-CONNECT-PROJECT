@@ -1,12 +1,5 @@
 import React, { useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-  StatusBar,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, StatusBar,} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 interface SplashScreenProps {
