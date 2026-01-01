@@ -1,0 +1,22 @@
+$sidebar-width: 280px;
+
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #F9FAFB;
+
+    .main-content {
+        flex: 1;
+        margin-left: $sidebar-width;
+        min-height: 100vh;
+    }
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .app-container {
+        .main-content {
+            margin-left: 260px;
+        }
+    }
+}
