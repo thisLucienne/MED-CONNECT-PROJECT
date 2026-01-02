@@ -1,0 +1,53 @@
+// Styles globaux de l'application
+.app-container {
+  display: flex;
+  min-height: 100vh;
+
+  &.login-mode {
+    // Mode login : pas de sidebar, contenu pleine largeur
+    .main-content {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
+
+  .main-content {
+    flex: 1;
+    transition: margin-left 0.3s ease;
+    
+    &.full-width {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
+}
+
+// Styles globaux pour les pages avec navbar
+.app-container:not(.login-mode) {
+  .main-content {
+    margin-left: 280px; // Largeur de la sidebar (280px selon navbar.component.scss)
+    width: calc(100% - 280px);
+    padding: 20px;
+    min-height: 100vh;
+  }
+}
+
+// Reset des marges pour les pages publiques
+.login-mode {
+  .main-content {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100vh;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .app-container:not(.login-mode) {
+    .main-content {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+}

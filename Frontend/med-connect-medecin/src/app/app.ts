@@ -15,11 +15,20 @@ export class App {
   showNavbar = false;
 
   constructor(private router: Router) {
+    // Initialiser showNavbar basé sur l'URL actuelle
+    this.updateNavbarVisibility(this.router.url);
+    
+    // Écouter les changements de route
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: any) => {
-      // Masquer la navbar sur la page login
-      this.showNavbar = !event.url.includes('/login');
+    ).subscribe((event: NavigationEnd) => {
+      this.updateNavbarVisibility(event.url);
     });
+  }
+
+  private updateNavbarVisibility(url: string): void {
+    // Masquer la navbar sur la page login et les pages publiques
+    const publicRoutes = ['/login', '/register', '/forgot-password'];
+    this.showNavbar = !publicRoutes.some(route => url === route || url.startsWith(route + '/'));
   }
 }
