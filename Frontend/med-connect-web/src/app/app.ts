@@ -1,25 +1,22 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
-import { NavbarComponent } from './components/navbar/navbar.component';
-import { CommonModule } from '@angular/common';
-import { filter } from 'rxjs/operators';
+import { Component, signal, inject, OnInit } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { SidebarComponent } from './components/layout/sidebar/sidebar';
+import { Header } from './components/layout/header/header';
+import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavbarComponent, CommonModule],
+  standalone: true,
+  imports: [RouterOutlet, SidebarComponent, Header],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App {
-  protected readonly title = signal('med-connect-web');
-  showNavbar = false;
+export class App implements OnInit {
+  protected readonly title = signal('nedcsss');
+  private themeService = inject(ThemeService);
 
-  constructor(private router: Router) {
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: any) => {
-      // Masquer la navbar sur la page login
-      this.showNavbar = !event.url.includes('/login');
-    });
+  ngOnInit() {
+    // Initialiser le thème global au démarrage de l'application
+    this.themeService.initTheme();
   }
 }

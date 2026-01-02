@@ -1,2 +1,15 @@
-﻿<app-navbar *ngIf="showNavbar"></app-navbar>
-<router-outlet></router-outlet>
+<div class="app-container">
+  <!-- Sidebar -->
+  <app-sidebar></app-sidebar>
+
+  <!-- Contenu principal -->
+  <main class="main-content">
+    <!-- Header -->
+    <app-header></app-header>
+    
+    <!-- Contenu des pages -->
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>
