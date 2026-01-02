@@ -94,8 +94,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
         {/* Formulaire */}
         <View style={styles.form}>
           {/* Nom et Prénom */}
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+          
+            <View style={[styles.inputGroup]}>
               <Text style={styles.label}>Prénom *</Text>
               <View style={styles.inputContainer}>
                 <Ionicons name="person-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
@@ -108,9 +108,9 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
                   autoCapitalize="words"
                 />
               </View>
-            </View>
-
-            <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+              </View>
+            
+            <View style={[styles.inputGroup]}>
               <Text style={styles.label}>Nom *</Text>
               <View style={styles.inputContainer}>
                 <Ionicons name="person-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
@@ -122,7 +122,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
                   onChangeText={setLastName}
                   autoCapitalize="words"
                 />
-              </View>
             </View>
           </View>
 

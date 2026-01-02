@@ -5,6 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 interface MessagingListProps {
   onOpenChat: () => void;
   onBack: () => void;
+  onNavigateToProfiles: () => void;
+  onNavigateToRecords: () => void;
+  onNavigateToActivity: () => void;
 }
 
 interface Message {
@@ -19,7 +22,7 @@ interface Message {
   initials: string;
 }
 
-const MessagingList: React.FC<MessagingListProps> = ({ onOpenChat, onBack }) => {
+const MessagingList: React.FC<MessagingListProps> = ({ onOpenChat, onBack, onNavigateToProfiles, onNavigateToRecords, onNavigateToActivity}) => {
   const [activeTab, setActiveTab] = useState('tous');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -195,6 +198,11 @@ const MessagingList: React.FC<MessagingListProps> = ({ onOpenChat, onBack }) => 
           <Text style={styles.navText}>Accueil</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.navItem} onPress={onNavigateToRecords}>
+          <Ionicons name="document-text-outline" size={26} color="#9ca3af" />
+          <Text style={styles.navText}>Dossiers</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.navItem}>
           <View>
             <Ionicons name="chatbubble" size={24} color="#3b82f6" />
@@ -205,14 +213,14 @@ const MessagingList: React.FC<MessagingListProps> = ({ onOpenChat, onBack }) => 
           <Text style={[styles.navText, styles.navTextActive]}>Messages</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={onNavigateToActivity}>
           <Ionicons name="notifications-outline" size={24} color="#9ca3af" />
           <Text style={styles.navText}>Activité</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="menu-outline" size={24} color="#9ca3af" />
-          <Text style={styles.navText}>Plus</Text>
+        <TouchableOpacity style={styles.navItem} onPress={onNavigateToProfiles}>
+          <Ionicons name="person-outline" size={26} color="#9ca3af" />
+          <Text style={styles.navText}>Profil</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
