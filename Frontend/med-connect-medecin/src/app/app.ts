@@ -11,7 +11,7 @@ import { filter } from 'rxjs/operators';
   styleUrl: './app.scss'
 })
 export class App {
-  protected readonly title = signal('med-connect-web');
+  protected readonly title = signal('med-connect-medecin');
   showNavbar = false;
 
   constructor(private router: Router) {

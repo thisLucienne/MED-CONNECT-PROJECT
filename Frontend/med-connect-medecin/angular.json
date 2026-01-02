@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "med-connect-web": {
+    "med-connect-medecin": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -61,10 +61,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "med-connect-web:build:production"
+              "buildTarget": "med-connect-medecin:build:production"
             },
             "development": {
-              "buildTarget": "med-connect-web:build:development"
+              "buildTarget": "med-connect-medecin:build:development"
             }
           },
           "defaultConfiguration": "development"
