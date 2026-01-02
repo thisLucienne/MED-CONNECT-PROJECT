@@ -17,6 +17,9 @@ interface DashboardScreenProps {
   onNavigateToFindDoctor: () => void;
   onNavigateToDocument: () => void;
   onLogout: () => void;
+  onNavigateToActivity: () => void;
+  onNavigateToLabResults: () => void;
+  onCreateDocument: () => void;
 }
 
 const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -24,6 +27,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onNavigateToProfile,
   onNavigateToRecords,
   onNavigateToFindDoctor,
+  onNavigateToActivity,
+  onNavigateToLabResults,
+  onCreateDocument,
   onLogout,
 }) => {
   return (
@@ -142,7 +148,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
               </TouchableOpacity>
 
               {/* Résultats labo */}
-              <TouchableOpacity style={[styles.quickAccessCard, styles.cardIndigo]}>
+              <TouchableOpacity style={[styles.quickAccessCard, styles.cardIndigo]} onPress={onNavigateToLabResults}>
                 <View style={styles.cardIconContainer}>
                   <Ionicons name="flask" size={32} color="#6366f1" />
                   <View style={[styles.notificationBadge, styles.badgeBlueNotif]}>
@@ -159,7 +165,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       </ScrollView>
 
       {/* Bouton FAB Vert */}
-      <TouchableOpacity style={styles.fab} >
+      <TouchableOpacity style={styles.fab} onPress={onCreateDocument}>
         <Ionicons name="add" size={32} color="white" />
       </TouchableOpacity>
 
@@ -185,7 +191,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <Text style={styles.navText}>Messages</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={onNavigateToActivity}>
           <Ionicons name="notifications-outline" size={26} color="#9ca3af" />
           <Text style={styles.navText}>Activité</Text>
         </TouchableOpacity>

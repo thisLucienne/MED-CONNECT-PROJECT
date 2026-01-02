@@ -11,6 +11,8 @@ import MedicalRecordsScreen from './src/components/MedicalRecordsScreen';
 import UploadDocumentScreen from './src/components/UploadDocumentScreen';
 import FindDoctorScreen from './src/components/FindDoctorScreen';
 import DoctorProfileScreen from './src/components/DoctorProfileScreen';
+import ActivityScreen from './src/components/ActivityScreen';
+import LabResultsScreen from './src/components/LabResultsScreen';
 
 type Screen = 
   | 'splash'
@@ -23,7 +25,10 @@ type Screen =
   | 'medicalRecords'
   | 'uploadDocument'
   | 'findDoctor'
-  | 'doctorProfile';
+  | 'doctorProfile'
+  | 'activity'
+  | 'labResults';
+
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
@@ -62,6 +67,9 @@ export default function App() {
             onNavigateToFindDoctor={() => navigateTo('findDoctor')}
             onLogout={() => navigateTo('login')}
             onNavigateToDocument={() => navigateTo('uploadDocument')}
+            onNavigateToActivity={() => navigateTo('activity')}
+            onNavigateToLabResults={() => navigateTo('labResults')}
+            onCreateDocument={() => navigateTo('uploadDocument')}
           />
         );
 
@@ -70,6 +78,9 @@ export default function App() {
           <MessagingList 
             onOpenChat={() => navigateTo('chat')}
             onBack={() => navigateTo('dashboard')}
+            onNavigateToProfiles={() => navigateTo('profile')}
+            onNavigateToRecords={() => navigateTo('medicalRecords')}
+            onNavigateToActivity={() => navigateTo('activity')}
           />
         );
 
@@ -97,6 +108,7 @@ export default function App() {
             onNavigateHome={() => navigateTo('dashboard')}
             onNavigateToMessages={() => navigateTo('messaging')}
             onNavigateToProfile={() => navigateTo('profile')}
+            onNavigateToActivity={() => navigateTo('activity')}
           />
         );
 
@@ -128,6 +140,26 @@ export default function App() {
           />
         );
 
+      case 'activity':
+        return (
+          <ActivityScreen
+           onNavigateHome={() => navigateTo('dashboard')}
+           onNavigateToRecords={() => navigateTo('medicalRecords')}
+           onNavigateToMessages={() => navigateTo('messaging')}
+           onNavigateToProfile={() => navigateTo('profile')}
+          />
+        );
+      case 'labResults':
+        return (
+          <LabResultsScreen
+            onBack={() => navigateTo('dashboard')}
+            onNavigateHome={() => navigateTo('dashboard')}
+            onNavigateToRecords={() => navigateTo('medicalRecords')}
+            onNavigateToMessages={() => navigateTo('messaging')}
+            onNavigateToActivity={() => navigateTo('activity')}
+            onNavigateToProfile={() => navigateTo('profile')}
+          />
+        );
       default:
         return <SplashScreen onStart={() => navigateTo('login')} />;
     }

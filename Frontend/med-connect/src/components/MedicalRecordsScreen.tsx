@@ -9,6 +9,7 @@ interface MedicalRecordsScreenProps {
   onNavigateHome: () => void;
   onNavigateToMessages: () => void;
   onNavigateToProfile: () => void;
+  onNavigateToActivity: () => void;
 }
 
 interface MedicalRecord {
@@ -27,7 +28,8 @@ const MedicalRecordsScreen: React.FC<MedicalRecordsScreenProps> = ({
   onCreateDocument,
   onNavigateHome,
   onNavigateToMessages,
-  onNavigateToProfile
+  onNavigateToProfile,
+  onNavigateToActivity
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
@@ -225,9 +227,9 @@ const MedicalRecordsScreen: React.FC<MedicalRecordsScreenProps> = ({
            <Text style={styles.navText}>Messages</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="calendar-outline" size={24} color="#9ca3af" />
-          <Text style={styles.navText}>Agenda</Text>
+        <TouchableOpacity style={styles.navItem} onPress={onNavigateToActivity}>
+          <Ionicons name="notifications-outline" size={24} color="#9ca3af" />
+          <Text style={styles.navText}>Activité</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem} onPress={onNavigateToProfile}>
