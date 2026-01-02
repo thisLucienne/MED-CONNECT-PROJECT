@@ -15,6 +15,7 @@ import { Observable } from 'rxjs';
 import { DossierService } from '../../services/dossier';
 import { PatientService } from '../../services/patient';
 import { MedecinService } from '../../services/medecin';
+import { ThemeService } from '../../services/theme.service';
 import {
   DossierMedical,
   DossierForm,
@@ -36,6 +37,7 @@ export class DossiersComponent implements OnInit {
   private dossierService = inject(DossierService);
   private patientService = inject(PatientService);
   private medecinService = inject(MedecinService);
+  private themeService = inject(ThemeService);
 
   // Observables pour les données
   dossiers$!: Observable<DossierMedical[]>;
@@ -61,6 +63,11 @@ export class DossiersComponent implements OnInit {
   groupesSanguins = GROUPES_SANGUINS;
   newAllergie: string = '';
   newAntecedent: string = '';
+
+  // Accès au service de thème
+  get isDarkMode() {
+    return this.themeService.darkMode;
+  }
 
   ngOnInit(): void {
     this.loadData();

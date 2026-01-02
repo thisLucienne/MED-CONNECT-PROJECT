@@ -17,6 +17,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { ParametreService } from '../../services/parametre';
+import { ThemeService } from '../../services/theme.service';
 import {
   AdminProfile,
   NotificationSettings,
@@ -37,6 +38,7 @@ import {
 })
 export class ParametresComponent implements OnInit {
   private parametreService = inject(ParametreService);
+  private themeService = inject(ThemeService);
 
   // Onglet actif
   activeTab: 'profil' | 'notifications' | 'securite' | 'apparence' | 'systeme' = 'profil';
@@ -65,6 +67,15 @@ export class ParametresComponent implements OnInit {
   // États UI
   isEditingProfile = false;
   showPasswordModal = false;
+
+  // Accès au service de thème
+  get isDarkMode() {
+    return this.themeService.darkMode;
+  }
+
+  toggleTheme() {
+    this.themeService.toggleTheme();
+  }
 
   ngOnInit(): void {
     this.loadSettings();

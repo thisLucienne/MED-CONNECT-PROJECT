@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MessagerieService } from '../../services/message';
+import { ThemeService } from '../../services/theme.service';
 import { Conversation, Message, MessageForm } from '../../models/message';
 
 @Component({
@@ -24,6 +25,7 @@ import { Conversation, Message, MessageForm } from '../../models/message';
 })
 export class MessagerieComponent implements OnInit, AfterViewChecked {
   private messagerieService = inject(MessagerieService);
+  private themeService = inject(ThemeService);
 
   /**
    * ViewChild pour auto-scroll vers le dernier message
@@ -47,6 +49,11 @@ export class MessagerieComponent implements OnInit, AfterViewChecked {
 
   // Flag pour auto-scroll
   private shouldScrollToBottom = false;
+
+  // Accès au service de thème
+  get isDarkMode() {
+    return this.themeService.darkMode;
+  }
 
   ngOnInit(): void {
     this.loadConversations();

@@ -3,6 +3,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PatientService } from '../../services/patient';
+import { ThemeService } from '../../services/theme.service';
 import { Observable } from 'rxjs';
 import { Patient, PatientForm } from '../../models/patient';
 
@@ -15,9 +16,15 @@ import { Patient, PatientForm } from '../../models/patient';
 })
 export class PatientsComponent implements OnInit {
   private patientService = inject(PatientService);
+  private themeService = inject(ThemeService);
 
   // Observables
   patients$!: Observable<Patient[]>;
+
+  // Accès au service de thème
+  get isDarkMode() {
+    return this.themeService.darkMode;
+  }
 
   // État du formulaire
   showForm: boolean = false;

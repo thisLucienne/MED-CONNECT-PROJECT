@@ -15,6 +15,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MedecinService } from '../../services/medecin';
+import { ThemeService } from '../../services/theme.service';
 import { Observable } from 'rxjs';
 import { Medecin, MedecinForm, SPECIALITES } from '../../models/medecin';
 
@@ -32,6 +33,7 @@ export class MedecinsComponent implements OnInit {
    * inject() est la nouvelle façon d'injecter (au lieu du constructor)
    */
   private medecinService = inject(MedecinService);
+  private themeService = inject(ThemeService);
 
   /**
    * Observable pour la liste des médecins
@@ -41,6 +43,11 @@ export class MedecinsComponent implements OnInit {
    * <div *ngFor="let medecin of medecins$ | async">
    */
   medecins$!: Observable<Medecin[]>;
+
+  // Accès au service de thème
+  get isDarkMode() {
+    return this.themeService.darkMode;
+  }
 
   /**
    * État de l'interface utilisateur
