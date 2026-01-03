@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { CommonModule } from '@angular/common';
@@ -10,11 +10,13 @@ import { filter } from 'rxjs/operators';
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App {
+export class App implements OnInit {
   protected readonly title = signal('med-connect-medecin');
   showNavbar = false;
 
-  constructor(private router: Router) {
+  constructor(private router: Router) {}
+
+  ngOnInit() {
     // Initialiser showNavbar basé sur l'URL actuelle
     this.updateNavbarVisibility(this.router.url);
     
@@ -28,7 +30,16 @@ export class App {
 
   private updateNavbarVisibility(url: string): void {
     // Masquer la navbar sur la page login et les pages publiques
-    const publicRoutes = ['/login', '/register', '/forgot-password'];
-    this.showNavbar = !publicRoutes.some(route => url === route || url.startsWith(route + '/'));
+    const publicRoutes = ['/login', '/register', '/forgot-password', '/'];
+    this.showNavbar = !publicRoutes.some(route => {
+      if (route === '/') {
+        return url === '/' || url === '';
+      }
+      return url === route || url.startsWith(route + '/');
+    });
+    
+    // Debug: afficher l'URL et l'état de la navbar
+    console.log('Current URL:', url);
+    console.log('Show navbar:', this.showNavbar);
   }
 }

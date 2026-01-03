@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
@@ -15,9 +15,17 @@ export class NavbarComponent implements OnInit {
   userRole = 'Cardiologue';
   isMenuOpen = false;
 
-  constructor() {}
+  // Notifications
+  unreadMessages = 3;
+  urgentDocuments = 2;
+  pendingRequests = 5;
 
-  ngOnInit(): void {}
+  constructor(private router: Router) {}
+
+  ngOnInit(): void {
+    // Simuler la mise à jour des notifications
+    this.updateNotifications();
+  }
 
   toggleMenu(): void {
     this.isMenuOpen = !this.isMenuOpen;
@@ -25,6 +33,18 @@ export class NavbarComponent implements OnInit {
 
   logout(): void {
     console.log('Déconnexion...');
-    // Implémenter la logique de déconnexion
+    // Rediriger vers la page de login
+    this.router.navigate(['/login']);
+  }
+
+  private updateNotifications(): void {
+    // Ici, on pourrait s'abonner à un service de notifications
+    // Pour l'instant, on simule avec des valeurs statiques
+    setInterval(() => {
+      // Simulation de nouvelles notifications
+      if (Math.random() > 0.8) {
+        this.unreadMessages = Math.floor(Math.random() * 10);
+      }
+    }, 30000); // Mise à jour toutes les 30 secondes
   }
 }

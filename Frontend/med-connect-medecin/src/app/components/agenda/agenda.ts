@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 interface CalendarDay {
   date: number;
@@ -147,8 +148,27 @@ export class Agenda implements OnInit {
     }
   ];
 
+  constructor(private router: Router) {}
+
   ngOnInit(): void {
     this.generateCalendar();
+  }
+
+  // Navigation methods
+  navigateToPatients(): void {
+    this.router.navigate(['/patients']);
+  }
+
+  navigateToMessages(): void {
+    this.router.navigate(['/messages']);
+  }
+
+  navigateToDossiers(): void {
+    this.router.navigate(['/dossiers']);
+  }
+
+  navigateToDashboard(): void {
+    this.router.navigate(['/dashboard']);
   }
 
   generateCalendar(): void {

@@ -1,5 +1,7 @@
 ﻿<div class="app-container" [class.login-mode]="!showNavbar">
-  <app-navbar *ngIf="showNavbar"></app-navbar>
+  @if (showNavbar) {
+    <app-navbar></app-navbar>
+  }
   <main class="main-content" [class.full-width]="!showNavbar">
     <router-outlet></router-outlet>
   </main>

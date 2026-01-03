@@ -4,6 +4,9 @@ import { DashboardComponent } from './components/dashboard(medecin)/dashboard.co
 import { PatientDComponent } from './components/patient_d/patient_d.component';
 import { Agenda } from './components/agenda/agenda';
 import { Messagerie } from './components/messagerie/messagerie';
+import { DossiersGlobauxComponent } from './components/dossiers-globaux/dossiers-globaux.component';
+import { StatisticsComponent } from './components/statistics/statistics.component';
+import { SettingsComponent } from './components/settings/settings.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -12,8 +15,8 @@ export const routes: Routes = [
   { path: 'patients', component: PatientDComponent },
   { path: 'agenda', component: Agenda },
   { path: 'messages', component: Messagerie },
-  { path: 'dossiers', component: DashboardComponent }, // À remplacer par le composant dossiers
-  { path: 'statistics', component: DashboardComponent }, // À remplacer par le composant statistiques
-  { path: 'settings', component: DashboardComponent }, // À remplacer par le composant paramètres
+  { path: 'dossiers', component: DossiersGlobauxComponent },
+  { path: 'statistics', component: StatisticsComponent },
+  { path: 'settings', component: SettingsComponent },
   { path: '**', redirectTo: '/login' }
 ];

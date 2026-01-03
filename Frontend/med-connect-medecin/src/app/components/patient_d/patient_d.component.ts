@@ -146,6 +146,33 @@ export class PatientDComponent implements OnInit {
     this.filterPatients();
   }
 
+  // Navigation methods
+  navigateToMessages(patientId?: string): void {
+    if (patientId) {
+      // Navigation vers messagerie avec patient spécifique
+      this.router.navigate(['/messages'], { queryParams: { patientId } });
+    } else {
+      this.router.navigate(['/messages']);
+    }
+  }
+
+  navigateToDossiers(patientId?: string): void {
+    if (patientId) {
+      // Navigation vers dossiers avec patient spécifique
+      this.router.navigate(['/dossiers'], { queryParams: { patientId } });
+    } else {
+      this.router.navigate(['/dossiers']);
+    }
+  }
+
+  navigateToAgenda(): void {
+    this.router.navigate(['/agenda']);
+  }
+
+  navigateToDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
   get totalPatients(): number {
     return this.patients.length;
   }

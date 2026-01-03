@@ -25,10 +25,11 @@
 // Styles globaux pour les pages avec navbar
 .app-container:not(.login-mode) {
   .main-content {
-    margin-left: 280px; // Largeur de la sidebar (280px selon navbar.component.scss)
-    width: calc(100% - 280px);
-    padding: 20px;
+    margin-left: 280px; // Largeur de la sidebar
+    width: calc(100vw - 280px); // Utiliser toute la largeur disponible
+    padding: 0; // Enlever le padding par défaut
     min-height: 100vh;
+    overflow-x: hidden; // Éviter le scroll horizontal
   }
 }
 

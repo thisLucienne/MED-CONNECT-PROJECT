@@ -147,13 +147,13 @@
           </div>
         </div>
         <div class="card-actions">
-          <button class="action-btn message" (click)="openMessage(patient)">
+          <button class="action-btn message" (click)="navigateToMessages(patient.id)">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" fill="currentColor"/>
             </svg>
             Message
           </button>
-          <button class="action-btn dossier" (click)="openDossier(patient)">
+          <button class="action-btn dossier" (click)="navigateToDossiers(patient.id)">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="currentColor"/>
             </svg>
@@ -203,12 +203,12 @@
           </span>
         </div>
         <div class="col-actions">
-          <button class="action-btn-small message" (click)="openMessage(patient)" title="Envoyer un message">
+          <button class="action-btn-small message" (click)="navigateToMessages(patient.id)" title="Envoyer un message">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" fill="currentColor"/>
             </svg>
           </button>
-          <button class="action-btn-small dossier" (click)="openDossier(patient)" title="Voir le dossier">
+          <button class="action-btn-small dossier" (click)="navigateToDossiers(patient.id)" title="Voir le dossier">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="currentColor"/>
             </svg>

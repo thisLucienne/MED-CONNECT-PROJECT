@@ -33,13 +33,14 @@
         <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" fill="currentColor"/>
       </svg>
       <span class="label">Messagerie</span>
-      <span class="badge">3</span>
+      <span class="badge" *ngIf="unreadMessages > 0">{{ unreadMessages }}</span>
     </a>
     <a routerLink="/dossiers" routerLinkActive="active" class="menu-item">
       <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="currentColor"/>
       </svg>
       <span class="label">Dossiers Globaux</span>
+      <span class="badge urgent" *ngIf="urgentDocuments > 0">{{ urgentDocuments }}</span>
     </a>
     <a routerLink="/statistics" routerLinkActive="active" class="menu-item">
       <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -350,6 +350,32 @@ export class Messagerie implements OnInit, AfterViewChecked {
     });
   }
 
+  // Navigation methods
+  navigateToPatients(): void {
+    this.router.navigate(['/patients']);
+  }
+
+  navigateToAgenda(): void {
+    this.router.navigate(['/agenda']);
+  }
+
+  navigateToDossiers(patientId?: string): void {
+    if (patientId) {
+      this.router.navigate(['/dossiers'], { queryParams: { patientId } });
+    } else {
+      this.router.navigate(['/dossiers']);
+    }
+  }
+
+  navigateToDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
+  // Méthode pour prendre un rendez-vous depuis la messagerie
+  scheduleAppointmentWithPatient(patientId: string): void {
+    this.router.navigate(['/agenda'], { queryParams: { patientId, action: 'schedule' } });
+  }
+
   ngAfterViewChecked(): void {
     if (this.shouldScrollToBottom) {
       this.scrollToBottom();
@@ -525,11 +551,11 @@ export class Messagerie implements OnInit, AfterViewChecked {
     // this.router.navigate(['/dossiers', this.selectedConversation.patientId]);
   }
 
-  scheduleAppointment(): void {
+  scheduleAppointmentFromChat(): void {
     if (!this.selectedConversation) return;
     console.log('Schedule appointment with:', this.selectedConversation.name);
     alert(`Prise de rendez-vous avec ${this.selectedConversation.name}\n\nNavigation vers /agenda avec le patient pré-sélectionné`);
-    // this.router.navigate(['/agenda'], { queryParams: { patientId: this.selectedConversation.patientId } });
+    this.router.navigate(['/agenda'], { queryParams: { patientId: this.selectedConversation.patientId, action: 'schedule' } });
   }
 
   archiveConversation(): void {
