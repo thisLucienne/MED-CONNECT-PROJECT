@@ -32,8 +32,30 @@ type Screen =
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
+  const [navigationStack, setNavigationStack] = useState<Screen[]>(['splash']);
 
   const navigateTo = (screen: Screen) => {
+    setCurrentScreen(screen);
+    setNavigationStack(prev => [...prev, screen]);
+  };
+
+  // Retour à l'écran précédent (enlève de l'historique)
+  const goBack = () => {
+    if (navigationStack.length > 1) {
+      const newStack = [...navigationStack];
+      newStack.pop(); // Enlever l'écran actuel
+      const previousScreen = newStack[newStack.length - 1];
+      
+      setNavigationStack(newStack);
+      setCurrentScreen(previousScreen);
+    }
+  };
+
+  // Navigation de remplacement (remplace l'écran actuel au lieu d'empiler)
+  const navigateReplace = (screen: Screen) => {
+    const newStack = [...navigationStack];
+    newStack[newStack.length - 1] = screen;
+    setNavigationStack(newStack);
     setCurrentScreen(screen);
   };
 
@@ -54,7 +76,7 @@ export default function App() {
         return (
           <RegisterScreen 
             onRegister={() => navigateTo('dashboard')}
-            onBackToLogin={() => navigateTo('login')}
+            onBackToLogin={() => goBack()}
           />
         );
 
@@ -77,7 +99,7 @@ export default function App() {
         return (
           <MessagingList 
             onOpenChat={() => navigateTo('chat')}
-            onBack={() => navigateTo('dashboard')}
+            onBack={() => goBack()}
             onNavigateToProfiles={() => navigateTo('profile')}
             onNavigateToRecords={() => navigateTo('medicalRecords')}
             onNavigateToActivity={() => navigateTo('activity')}
@@ -87,14 +109,14 @@ export default function App() {
       case 'chat':
         return (
           <ChatConversation 
-            onBack={() => navigateTo('messaging')}
+            onBack={() => goBack()}
           />
         );
 
       case 'profile':
         return (
           <ProfileScreen 
-            onBack={() => navigateTo('dashboard')}
+            onBack={() => goBack()}
             onLogout={() => navigateTo('login')}
           />
         );
@@ -102,7 +124,7 @@ export default function App() {
       case 'medicalRecords':
         return (
           <MedicalRecordsScreen 
-            onBack={() => navigateTo('dashboard')}
+            onBack={() => goBack()}
             onOpenRecord={(id) => alert(`Ouvrir dossier ${id}`)}
             onCreateDocument={() => navigateTo('uploadDocument')}
             onNavigateHome={() => navigateTo('dashboard')}
@@ -115,7 +137,7 @@ export default function App() {
       case 'uploadDocument':
         return (
           <UploadDocumentScreen 
-            onBack={() => navigateTo('medicalRecords')}
+            onBack={() => goBack()}
             onUpload={() => {
               alert('Document enregistré !');
               navigateTo('medicalRecords');
@@ -126,15 +148,29 @@ export default function App() {
       case 'findDoctor':
         return (
           <FindDoctorScreen 
-            onBack={() => navigateTo('dashboard')}
-            onSelectDoctor={(id) => navigateTo('doctorProfile')}
+            onBack={() => goBack()}
+            onNavigateToMessages={() => navigateTo('messaging')}
+            onNavigateToProfile={() => navigateTo('profile')}
+            onNavigateToRecords={() => navigateTo('medicalRecords')}
+            onNavigateToActivity={() => navigateTo('activity')}
+            onDoctorPress={(doctorId) => {
+              console.log('Voir médecin:', doctorId);
+              navigateTo('doctorProfile');
+            }}
+            onCallDoctor={(phone) => {
+              alert(`Appel vers ${phone}`);
+            }}
+            onMessageDoctor={(doctorId) => {
+              console.log('Message à:', doctorId);
+              navigateTo('chat');
+            }}
           />
         );
 
       case 'doctorProfile':
         return (
           <DoctorProfileScreen 
-            onBack={() => navigateTo('findDoctor')}
+            onBack={() => goBack()}
             onMessage={() => navigateTo('chat')}
             onCall={() => alert('Appel en cours...')}
           />
@@ -143,16 +179,19 @@ export default function App() {
       case 'activity':
         return (
           <ActivityScreen
-           onNavigateHome={() => navigateTo('dashboard')}
-           onNavigateToRecords={() => navigateTo('medicalRecords')}
-           onNavigateToMessages={() => navigateTo('messaging')}
-           onNavigateToProfile={() => navigateTo('profile')}
+             onBack={() => goBack()}
+      onSelectDoctor={(id) => navigateTo('doctorProfile')}
+      onNavigateToMessages={() => navigateTo('messaging')}
+      onNavigateToProfile={() => navigateTo('profile')}
+      onNavigateToRecords={() => navigateTo('medicalRecords')}
+      onNavigateToActivity={() => navigateTo('activity')}
           />
         );
+
       case 'labResults':
         return (
           <LabResultsScreen
-            onBack={() => navigateTo('dashboard')}
+            onBack={() => goBack()}
             onNavigateHome={() => navigateTo('dashboard')}
             onNavigateToRecords={() => navigateTo('medicalRecords')}
             onNavigateToMessages={() => navigateTo('messaging')}
