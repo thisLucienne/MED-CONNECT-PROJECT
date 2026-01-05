@@ -228,8 +228,8 @@ const MedicalRecordsScreen: React.FC<MedicalRecordsScreenProps> = ({
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem} onPress={onNavigateToActivity}>
-          <Ionicons name="notifications-outline" size={24} color="#9ca3af" />
-          <Text style={styles.navText}>Activité</Text>
+          <Ionicons name="people" size={32} color="#14b8a6" />
+          <Text style={styles.navText}>Médecins</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem} onPress={onNavigateToProfile}>
