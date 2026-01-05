@@ -1,0 +1,395 @@
+<!-- 
+  EXPLICATION :
+  C'est la VUE dans l'architecture MVC.
+  Elle affiche les données et déclenche les méthodes du Controller.
+  
+  *ngIf : Directive pour afficher/masquer un élément (comme un if)
+  *ngFor : Directive pour boucler sur un tableau (comme un for)
+  [(ngModel)] : Two-way data binding (liaison bidirectionnelle)
+  (click) : Event binding pour gérer les clics
+  | async : Pipe pour s'abonner automatiquement à un Observable
+-->
+
+<div class="medecins-page">
+    <!-- Section des statistiques -->
+    <div class="stats-section">
+        <div class="stats-header">
+            <h2>Statistiques des médecins</h2>
+            <p class="subtitle">Vue d'ensemble des demandes et validations</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card pending">
+                <div class="stat-header">
+                    <div class="stat-content">
+                        <h3>{{ medecinStats.enAttente }}</h3>
+                        <p>En attente</p>
+                    </div>
+                    <div class="stat-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card approved">
+                <div class="stat-header">
+                    <div class="stat-content">
+                        <h3>{{ medecinStats.approuves }}</h3>
+                        <p>Approuvés</p>
+                    </div>
+                    <div class="stat-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card rejected">
+                <div class="stat-header">
+                    <div class="stat-content">
+                        <h3>{{ medecinStats.rejetes }}</h3>
+                        <p>Rejetés</p>
+                    </div>
+                    <div class="stat-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <path d="M15 9L9 15M9 9L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section de validation des médecins en attente -->
+    <div class="validation-section" *ngIf="(pendingMedecins$ | async)?.length">
+        <div class="validation-header">
+            <div class="header-left">
+                <h2>Validation des médecins</h2>
+                <p class="subtitle">{{ (pendingMedecins$ | async)?.length }} médecin(s) en attente de validation</p>
+            </div>
+            <div class="validation-stats">
+                <span class="pending-count">{{ (pendingMedecins$ | async)?.length }} en attente</span>
+            </div>
+        </div>
+
+        <div class="pending-medecins-grid">
+            <div class="pending-card" *ngFor="let medecin of pendingMedecins$ | async">
+                <div class="card-header">
+                    <div class="medecin-info">
+                        <div class="avatar">
+                            {{ medecin.prenom.charAt(0) }}{{ medecin.nom.charAt(0) }}
+                        </div>
+                        <div class="info-text">
+                            <h3>Dr. {{ medecin.prenom }} {{ medecin.nom }}</h3>
+                            <p class="specialite">{{ medecin.specialite }}</p>
+                            <p class="order-number">{{ medecin.email }}</p>
+                        </div>
+                    </div>
+                    <div class="pending-badge">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        En attente
+                    </div>
+                </div>
+
+                <div class="card-details">
+                    <div class="detail-row">
+                        <span class="label">Numéro de licence:</span>
+                        <span class="value">{{ medecin.numeroOrdre }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Téléphone:</span>
+                        <span class="value">{{ medecin.telephone }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Date de demande:</span>
+                        <span class="value">{{ medecin.dateInscription | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                </div>
+
+                <div class="card-actions">
+                    <button class="btn-reject" (click)="rejectMedecin(medecin)" title="Rejeter la demande">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <path d="M15 9L9 15M9 9L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        Rejeter
+                    </button>
+                    <button class="btn-approve" (click)="approveMedecin(medecin)" title="Approuver le médecin">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Approuver
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- En-tête de la page -->
+    <div class="page-header">
+        <div class="header-left">
+            <h1>Médecins</h1>
+            <p class="subtitle">Gestion des médecins de la plateforme Med-Connect</p>
+        </div>
+        <button class="btn-primary" (click)="openAddForm()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            <span>Ajouter un médecin</span>
+        </button>
+    </div>
+
+    <!-- Barre de recherche et filtres -->
+    <div class="filters-section">
+        <!-- Recherche -->
+        <div class="search-input-wrapper">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
+                <path d="M20 20L16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            <!-- 
+        [(ngModel)] = Two-way binding
+        Lie la valeur de l'input à la propriété searchQuery du composant
+        Quand l'utilisateur tape, searchQuery est mis à jour automatiquement
+      -->
+            <input type="text" placeholder="Rechercher par nom, prénom, email ou spécialité..."
+                [(ngModel)]="searchQuery" (input)="onSearch()" class="search-input" />
+        </div>
+
+        <!-- Filtre par spécialité -->
+        <div class="filter-group">
+            <select [(ngModel)]="selectedSpecialite" (change)="onFilterBySpecialite()" class="filter-select">
+                <option value="">Toutes les spécialités</option>
+                <!-- 
+          *ngFor="let spec of specialites"
+          Boucle sur le tableau specialites du composant
+        -->
+                <option *ngFor="let spec of specialites" [value]="spec">{{ spec }}</option>
+            </select>
+
+            <!-- Bouton reset des filtres -->
+            <button class="btn-reset" (click)="resetFilters()" *ngIf="searchQuery || selectedSpecialite">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                Réinitialiser
+            </button>
+        </div>
+    </div>
+
+    <!-- Liste des médecins -->
+    <div class="medecins-list">
+        <div class="table-container">
+            <table class="medecins-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Médecin</th>
+                        <th>Spécialité</th>
+                        <th>Téléphone</th>
+                        <th>Email</th>
+                        <th>Vérification</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 
+            *ngFor="let medecin of medecins$ | async"
+            
+            medecins$ : Observable dans le composant
+            | async : Pipe qui s'abonne automatiquement à l'Observable
+            
+            Dès que medecins$ émet une nouvelle valeur (via BehaviorSubject.next()),
+            Angular met automatiquement à jour cette liste !
+          -->
+                    <tr *ngFor="let medecin of medecins$ | async">
+                        <td class="medecin-id">{{ medecin.id }}</td>
+
+                        <!-- Colonne avec avatar et infos -->
+                        <td class="medecin-info">
+                            <div class="info-wrapper">
+                                <div class="avatar">
+                                    {{ medecin.prenom.charAt(0) }}{{ medecin.nom.charAt(0) }}
+                                </div>
+                                <div class="info-text">
+                                    <p class="name">Dr. {{ medecin.prenom }} {{ medecin.nom }}</p>
+                                    <p class="order-number">{{ medecin.numeroOrdre }}</p>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="specialite-badge">{{ medecin.specialite }}</span>
+                        </td>
+
+                        <td>{{ medecin.telephone }}</td>
+                        <td>{{ medecin.email }}</td>
+
+                        <!-- Colonne vérification -->
+                        <td>
+                            <!-- 
+                *ngIf : Affiche conditionnellement
+                [class.verified] : Ajoute la classe CSS "verified" si medecin.verified est true
+              -->
+                            <span class="verification-badge" [class.verified]="medecin.verified"
+                                [class.pending]="!medecin.verified">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" *ngIf="medecin.verified">
+                                    <path
+                                        d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                                        stroke="currentColor" stroke-width="2" />
+                                </svg>
+                                {{ medecin.verified ? 'Vérifié' : 'En attente' }}
+                            </span>
+                        </td>
+
+                        <!-- Colonne statut (cliquable pour changer) -->
+                        <td>
+                            <button class="status-badge" [class.active]="medecin.statut === 'actif'"
+                                [class.inactive]="medecin.statut === 'inactif'"
+                                [class.pending]="medecin.statut === 'en attente'"
+                                [class.suspended]="medecin.statut === 'suspendu'" (click)="toggleStatus(medecin)">
+                                {{ medecin.statut }}
+                            </button>
+                        </td>
+
+                        <!-- Actions -->
+                        <td>
+                            <div class="actions">
+                                <!-- Bouton vérifier (si pas encore vérifié) -->
+                                <button class="action-btn verify" (click)="verifyMedecin(medecin)" title="Vérifier"
+                                    *ngIf="!medecin.verified">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                                            stroke="currentColor" stroke-width="2" />
+                                    </svg>
+                                </button>
+
+                                <!-- Bouton suspendre (si actif ou inactif) -->
+                                <button class="action-btn suspend" (click)="suspendMedecin(medecin)" title="Suspendre"
+                                    *ngIf="medecin.statut === 'actif' || medecin.statut === 'inactif'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                        <path d="M15 9L9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </button>
+
+                                <!-- Bouton modifier -->
+                                <button class="action-btn edit" (click)="editMedecin(medecin)" title="Modifier">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M11 4H7C5.89543 4 5 4.89543 5 6V18C5 19.1046 5.89543 20 7 20H19C20.1046 20 21 19.1046 21 18V14M15.5 3.5L20.5 8.5M9 15L13.5 10.5L18.5 5.5C19.3284 4.67157 19.3284 3.32843 18.5 2.5C17.6716 1.67157 16.3284 1.67157 15.5 2.5L10.5 7.5L6 12L5 15L9 15Z"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                    </svg>
+                                </button>
+
+                                <!-- Bouton supprimer -->
+                                <button class="action-btn delete" (click)="deleteMedecin(medecin)" title="Supprimer">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Formulaire -->
+    <!-- *ngIf="showForm" : Affiche le modal seulement si showForm est true -->
+    <div class="modal-overlay" *ngIf="showForm" (click)="closeForm()">
+        <!-- 
+      (click)="$event.stopPropagation()" 
+      Empêche la fermeture du modal quand on clique à l'intérieur
+    -->
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>{{ isEditing ? 'Modifier le médecin' : 'Ajouter un nouveau médecin' }}</h2>
+                <button class="close-btn" (click)="closeForm()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 
+        Formulaire avec (ngSubmit)
+        Quand on soumet le form, ça appelle onSubmit() du composant
+      -->
+            <form class="medecin-form" (ngSubmit)="onSubmit()">
+                <!-- Ligne avec 2 colonnes -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nom">Nom *</label>
+                        <!-- 
+              [(ngModel)]="medecinForm.nom"
+              Two-way binding : lie l'input à la propriété nom du formulaire
+              name="nom" : Requis par Angular pour les formulaires
+            -->
+                        <input type="text" id="nom" [(ngModel)]="medecinForm.nom" name="nom" required
+                            placeholder="Entrez le nom" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prenom">Prénom *</label>
+                        <input type="text" id="prenom" [(ngModel)]="medecinForm.prenom" name="prenom" required
+                            placeholder="Entrez le prénom" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="specialite">Spécialité *</label>
+                        <select id="specialite" [(ngModel)]="medecinForm.specialite" name="specialite" required>
+                            <option value="">Sélectionner une spécialité</option>
+                            <option *ngFor="let spec of specialites" [value]="spec">{{ spec }}</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="numeroOrdre">Numéro d'ordre *</label>
+                        <input type="text" id="numeroOrdre" [(ngModel)]="medecinForm.numeroOrdre" name="numeroOrdre"
+                            required placeholder="Ex: CNOM-2024-001" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="telephone">Téléphone *</label>
+                        <input type="tel" id="telephone" [(ngModel)]="medecinForm.telephone" name="telephone" required
+                            placeholder="+237 6 XX XX XX XX" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" [(ngModel)]="medecinForm.email" name="email" required
+                            placeholder="dr.exemple@medconnect.com" />
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" (click)="closeForm()">
+                        Annuler
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        {{ isEditing ? 'Mettre à jour' : 'Ajouter' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
