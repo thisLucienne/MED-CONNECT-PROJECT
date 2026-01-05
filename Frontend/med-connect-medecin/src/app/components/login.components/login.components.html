@@ -1,0 +1,78 @@
+﻿<div class="login-container">
+  <div class="login-card">
+    <div class="header">
+      <img src="logo.png" alt="logo">
+      <h2>Connexion À l'Espace Professionnel</h2>
+      <p>Accédez à votre plateforme Med-Connect en toute sécurité.</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <div class="form-group">
+        <label for="identifier">Email Professionnel</label>
+        <input 
+          type="email" 
+          id="identifier" 
+          [(ngModel)]="credentials.identifier" 
+          name="identifier" 
+          required
+          email
+          [disabled]="isLoading"
+          class="form-control"
+          placeholder="votre.email@exemple.com"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input 
+          type="password" 
+          id="password" 
+          [(ngModel)]="credentials.password" 
+          name="password" 
+          required
+          [disabled]="isLoading"
+          class="form-control"
+          placeholder="Votre mot de passe"
+        >
+      </div>
+
+      <div class="options">
+        <div class="checkbox-group">
+          <input type="checkbox" id="rememberMe" [(ngModel)]="rememberMe" name="rememberMe" [disabled]="isLoading">
+          <label for="rememberMe">Se souvenir de moi</label>
+        </div>
+        <a href="#" class="forgot-password">Mot de passe oublié ?</a>
+      </div>
+
+      <!-- Message d'erreur -->
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn-primary"
+        [disabled]="!loginForm.form.valid || isLoading"
+      >
+        <span *ngIf="isLoading">Connexion en cours...</span>
+        <span *ngIf="!isLoading">Se Connecter</span>
+      </button>
+    </form>
+
+    <div class="separator">
+      <span>OU</span>
+    </div>
+
+    <button class="btn-secondary" [disabled]="isLoading" (click)="goToRegister()">
+      Demander un Accès Professionnel
+    </button>
+
+    <!-- Informations de test -->
+    <div class="test-info" *ngIf="!isLoading">
+      <h4>🧪 Comptes de test disponibles :</h4>
+      <p><strong>Médecin :</strong> marie.test.1767332808070@test.com</p>
+      <p><strong>Mot de passe :</strong> Doctor123!</p>
+      <small>Note : Un code 2FA sera envoyé par email</small>
+    </div>
+  </div>
+</div>

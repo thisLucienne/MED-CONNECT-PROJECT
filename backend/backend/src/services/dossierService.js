@@ -1,0 +1,385 @@
+const { db } = require('../config/database');
+const { dossiersMedicaux, accesDossiers, documentsMedicaux, ordonnances, allergies, commentaires, users } = require('../db/schema');
+const { eq, and, desc } = require('drizzle-orm');
+const uploadService = require('./uploadService');
+
+class DossierService {
+  // Créer un dossier médical (par le patient)
+  async creerDossier(patientId, titre, description, type) {
+    try {
+      const [dossier] = await db.insert(dossiersMedicaux).values({
+        idPatient: patientId,
+        titre,
+        description,
+        type
+      }).returning();
+
+      return dossier;
+    } catch (error) {
+      console.error('Erreur lors de la création du dossier:', error);
+      throw error;
+    }
+  }
+
+  // Donner accès à un médecin
+  async donnerAccesMedecin(dossierId, medecinId, patientId, typeAcces = 'LECTURE') {
+    try {
+      // Vérifier que le dossier appartient au patient
+      const [dossier] = await db
+        .select()
+        .from(dossiersMedicaux)
+        .where(eq(dossiersMedicaux.id, dossierId))
+        .limit(1);
+
+      if (!dossier || dossier.idPatient !== patientId) {
+        throw new Error('Dossier non trouvé ou accès non autorisé');
+      }
+
+      // Vérifier que le médecin existe et est approuvé
+      const [medecin] = await db
+        .select()
+        .from(users)
+        .where(and(
+          eq(users.id, medecinId),
+          eq(users.role, 'DOCTOR'),
+          eq(users.status, 'APPROVED')
+        ))
+        .limit(1);
+
+      if (!medecin) {
+        throw new Error('Médecin non trouvé ou non approuvé');
+      }
+
+      // Créer ou mettre à jour l'accès
+      const [acces] = await db.insert(accesDossiers).values({
+        idDossier: dossierId,
+        idMedecin: medecinId,
+        typeAcces,
+        statut: 'ACTIF'
+      }).onConflictDoUpdate({
+        target: [accesDossiers.idDossier, accesDossiers.idMedecin],
+        set: {
+          typeAcces,
+          statut: 'ACTIF',
+          dateAutorisation: new Date()
+        }
+      }).returning();
+
+      return acces;
+    } catch (error) {
+      console.error('Erreur lors de l\'octroi d\'accès:', error);
+      throw error;
+    }
+  }
+
+  // Révoquer l'accès d'un médecin
+  async revoquerAccesMedecin(dossierId, medecinId, patientId) {
+    try {
+      // Vérifier que le dossier appartient au patient
+      const [dossier] = await db
+        .select()
+        .from(dossiersMedicaux)
+        .where(eq(dossiersMedicaux.id, dossierId))
+        .limit(1);
+
+      if (!dossier || dossier.idPatient !== patientId) {
+        throw new Error('Dossier non trouvé ou accès non autorisé');
+      }
+
+      await db
+        .update(accesDossiers)
+        .set({ statut: 'REVOQUE' })
+        .where(and(
+          eq(accesDossiers.idDossier, dossierId),
+          eq(accesDossiers.idMedecin, medecinId)
+        ));
+
+      return { success: true };
+    } catch (error) {
+      console.error('Erreur lors de la révocation d\'accès:', error);
+      throw error;
+    }
+  }
+
+  // Obtenir les dossiers d'un patient
+  async obtenirDossiersPatient(patientId, page = 1, limite = 20) {
+    try {
+      const offset = (page - 1) * limite;
+
+      const dossiers = await db
+        .select({
+          id: dossiersMedicaux.id,
+          titre: dossiersMedicaux.titre,
+          description: dossiersMedicaux.description,
+          type: dossiersMedicaux.type,
+          statut: dossiersMedicaux.statut,
+          dateCreation: dossiersMedicaux.dateCreation,
+          dateModification: dossiersMedicaux.dateModification,
+          medecin: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            profilePicture: users.profilePicture
+          }
+        })
+        .from(dossiersMedicaux)
+        .leftJoin(users, eq(dossiersMedicaux.idMedecin, users.id))
+        .where(eq(dossiersMedicaux.idPatient, patientId))
+        .orderBy(desc(dossiersMedicaux.dateCreation))
+        .limit(limite)
+        .offset(offset);
+
+      return dossiers;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des dossiers:', error);
+      throw error;
+    }
+  }
+
+  // Obtenir un dossier complet avec tous ses éléments
+  async obtenirDossierComplet(dossierId, utilisateurId) {
+    try {
+      // Vérifier l'accès au dossier
+      const [dossier] = await db
+        .select()
+        .from(dossiersMedicaux)
+        .where(eq(dossiersMedicaux.id, dossierId))
+        .limit(1);
+
+      if (!dossier) {
+        throw new Error('Dossier non trouvé');
+      }
+
+      // Vérifier l'accès
+      let hasAccess = false;
+      
+      if (dossier.idPatient === utilisateurId) {
+        // Le patient a toujours accès à ses dossiers
+        hasAccess = true;
+      } else {
+        // Vérifier si le médecin a un accès autorisé
+        const [acces] = await db
+          .select()
+          .from(accesDossiers)
+          .where(and(
+            eq(accesDossiers.idDossier, dossierId),
+            eq(accesDossiers.idMedecin, utilisateurId),
+            eq(accesDossiers.statut, 'ACTIF')
+          ))
+          .limit(1);
+        
+        hasAccess = !!acces;
+      }
+
+      if (!hasAccess) {
+        throw new Error('Accès non autorisé à ce dossier');
+      }
+
+      // Récupérer les ordonnances
+      const ordonnancesDossier = await db
+        .select()
+        .from(ordonnances)
+        .where(eq(ordonnances.idDossier, dossierId))
+        .orderBy(desc(ordonnances.dateCreation));
+
+      // Récupérer les documents
+      const documents = await db
+        .select()
+        .from(documentsMedicaux)
+        .where(eq(documentsMedicaux.idDossier, dossierId))
+        .orderBy(desc(documentsMedicaux.dateUpload));
+
+      // Récupérer les allergies
+      const allergiesDossier = await db
+        .select()
+        .from(allergies)
+        .where(eq(allergies.idDossier, dossierId))
+        .orderBy(desc(allergies.dateCreation));
+
+      // Récupérer les commentaires
+      const commentairesDossier = await db
+        .select({
+          id: commentaires.id,
+          contenu: commentaires.contenu,
+          dateCreation: commentaires.dateCreation,
+          auteur: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            role: users.role,
+            profilePicture: users.profilePicture
+          }
+        })
+        .from(commentaires)
+        .innerJoin(users, eq(commentaires.auteur, users.id))
+        .where(eq(commentaires.idDossier, dossierId))
+        .orderBy(desc(commentaires.dateCreation));
+
+      return {
+        ...dossier,
+        ordonnances: ordonnancesDossier,
+        documents,
+        allergies: allergiesDossier,
+        commentaires: commentairesDossier
+      };
+    } catch (error) {
+      console.error('Erreur lors de la récupération du dossier complet:', error);
+      throw error;
+    }
+  }
+
+  // Ajouter un document au dossier
+  async ajouterDocument(dossierId, nom, type, file, utilisateurId) {
+    try {
+      // Vérifier l'accès au dossier
+      const [dossier] = await db
+        .select()
+        .from(dossiersMedicaux)
+        .where(eq(dossiersMedicaux.id, dossierId))
+        .limit(1);
+
+      if (!dossier) {
+        throw new Error('Dossier non trouvé');
+      }
+
+      if (dossier.idPatient !== utilisateurId && dossier.idMedecin !== utilisateurId) {
+        throw new Error('Accès non autorisé à ce dossier');
+      }
+
+      // Upload du fichier
+      const uploadResult = await uploadService.uploadFile(file, 'medical-documents');
+
+      // Enregistrer en base
+      const [document] = await db.insert(documentsMedicaux).values({
+        idDossier: dossierId,
+        nom,
+        type,
+        cheminFichier: uploadResult.secure_url
+      }).returning();
+
+      return document;
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du document:', error);
+      throw error;
+    }
+  }
+
+  // Ajouter une ordonnance
+  async ajouterOrdonnance(dossierId, medicament, dosage, duree, medecinId) {
+    try {
+      // Vérifier que le médecin a accès au dossier
+      const [dossier] = await db
+        .select()
+        .from(dossiersMedicaux)
+        .where(eq(dossiersMedicaux.id, dossierId))
+        .limit(1);
+
+      if (!dossier || dossier.idMedecin !== medecinId) {
+        throw new Error('Accès non autorisé à ce dossier');
+      }
+
+      const [ordonnance] = await db.insert(ordonnances).values({
+        idDossier: dossierId,
+        medicament,
+        dosage,
+        duree
+      }).returning();
+
+      return ordonnance;
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'ordonnance:', error);
+      throw error;
+    }
+  }
+
+  // Ajouter une allergie
+  async ajouterAllergie(dossierId, nom, utilisateurId) {
+    try {
+      // Vérifier l'accès au dossier
+      const [dossier] = await db
+        .select()
+        .from(dossiersMedicaux)
+        .where(eq(dossiersMedicaux.id, dossierId))
+        .limit(1);
+
+      if (!dossier) {
+        throw new Error('Dossier non trouvé');
+      }
+
+      if (dossier.idPatient !== utilisateurId && dossier.idMedecin !== utilisateurId) {
+        throw new Error('Accès non autorisé à ce dossier');
+      }
+
+      const [allergie] = await db.insert(allergies).values({
+        idDossier: dossierId,
+        nom
+      }).returning();
+
+      return allergie;
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de l\'allergie:', error);
+      throw error;
+    }
+  }
+
+  // Ajouter un commentaire
+  async ajouterCommentaire(dossierId, contenu, auteurId) {
+    try {
+      // Vérifier l'accès au dossier
+      const [dossier] = await db
+        .select()
+        .from(dossiersMedicaux)
+        .where(eq(dossiersMedicaux.id, dossierId))
+        .limit(1);
+
+      if (!dossier) {
+        throw new Error('Dossier non trouvé');
+      }
+
+      if (dossier.idPatient !== auteurId && dossier.idMedecin !== auteurId) {
+        throw new Error('Accès non autorisé à ce dossier');
+      }
+
+      const [commentaire] = await db.insert(commentaires).values({
+        idDossier: dossierId,
+        contenu,
+        auteur: auteurId
+      }).returning();
+
+      return commentaire;
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du commentaire:', error);
+      throw error;
+    }
+  }
+
+  // Mettre à jour le statut d'un dossier
+  async mettreAJourStatut(dossierId, statut, medecinId) {
+    try {
+      const [dossier] = await db
+        .select()
+        .from(dossiersMedicaux)
+        .where(eq(dossiersMedicaux.id, dossierId))
+        .limit(1);
+
+      if (!dossier || dossier.idMedecin !== medecinId) {
+        throw new Error('Accès non autorisé à ce dossier');
+      }
+
+      await db
+        .update(dossiersMedicaux)
+        .set({ 
+          statut,
+          dateModification: new Date()
+        })
+        .where(eq(dossiersMedicaux.id, dossierId));
+
+      return { success: true };
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut:', error);
+      throw error;
+    }
+  }
+}
+
+module.exports = new DossierService();

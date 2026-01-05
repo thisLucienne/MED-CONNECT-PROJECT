@@ -1,0 +1,174 @@
+<div class="dashboard">
+    <!-- En-tête -->
+    <div class="dashboard-header">
+        <h1>Tableau de bord</h1>
+        <p class="subtitle">Vue d'ensemble de la plateforme Med-Connect</p>
+    </div>
+
+    <!-- Cartes de statistiques -->
+    <div class="stats-grid" *ngIf="stats$ | async as stats">
+        <!-- Total Patients -->
+        <div class="stat-card">
+            <div class="stat-content">
+                <div class="stat-info">
+                    <h3 class="stat-title">Total Patients</h3>
+                    <p class="stat-value">{{ stats.totalPatients | number }}</p>
+                    <div class="stat-change positive">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                        <span>+{{ stats.patientsGrowth }}%</span>
+                    </div>
+                </div>
+                <div class="stat-icon blue">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M17 20H22V18C22 16.3431 20.6569 15 19 15C18.0444 15 17.1931 15.4468 16.6438 16.1429M17 20H7M17 20V18C17 17.3438 16.8736 16.717 16.6438 16.1429M7 20H2V18C2 16.3431 3.34315 15 5 15C5.95561 15 6.80686 15.4468 7.35625 16.1429M7 20V18C7 17.3438 7.12642 16.717 7.35625 16.1429M7.35625 16.1429C8.0935 14.301 9.89482 13 12 13C14.1052 13 15.9065 14.301 16.6438 16.1429M15 7C15 8.65685 13.6569 10 12 10C10.3431 10 9 8.65685 9 7C9 5.34315 10.3431 4 12 4C13.6569 4 15 5.34315 15 7ZM21 10C21 11.1046 20.1046 12 19 12C17.8954 12 17 11.1046 17 10C17 8.89543 17.8954 8 19 8C20.1046 8 21 8.89543 21 10ZM7 10C7 11.1046 6.10457 12 5 12C3.89543 12 3 11.1046 3 10C3 8.89543 3.89543 8 5 8C6.10457 8 7 8.89543 7 10Z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Médecins Actifs -->
+        <div class="stat-card">
+            <div class="stat-content">
+                <div class="stat-info">
+                    <h3 class="stat-title">Médecins Actifs</h3>
+                    <p class="stat-value">{{ stats.medecinsActifs | number }}</p>
+                    <div class="stat-change positive">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                        <span>+{{ stats.medecinsGrowth }}%</span>
+                    </div>
+                </div>
+                <div class="stat-icon green">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M5.12104 17.8037C7.15267 16.6554 9.4998 16 12 16C14.5002 16 16.8473 16.6554 18.879 17.8037M15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10ZM21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dossiers Médicaux -->
+        <div class="stat-card">
+            <div class="stat-content">
+                <div class="stat-info">
+                    <h3 class="stat-title">Dossiers Médicaux</h3>
+                    <p class="stat-value">{{ stats.dossiersMedicaux | number }}</p>
+                    <div class="stat-change positive">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                        <span>+{{ stats.dossiersGrowth }}%</span>
+                    </div>
+                </div>
+                <div class="stat-icon purple">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M9 12H15M9 16H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consultations -->
+        <div class="stat-card">
+            <div class="stat-content">
+                <div class="stat-info">
+                    <h3 class="stat-title">Consultations</h3>
+                    <p class="stat-value">{{ stats.consultations | number }}</p>
+                    <div class="stat-change positive">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 12V4M8 4L4 8M8 4L12 8" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                        <span>+{{ stats.consultationsGrowth }}%</span>
+                    </div>
+                </div>
+                <div class="stat-icon orange">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path
+                            d="M9 19V6L5 6C3.89543 6 3 6.89543 3 8V17C3 18.1046 3.89543 19 5 19H9ZM9 19H19C20.1046 19 21 18.1046 21 17V8C21 6.89543 20.1046 6 19 6H15V19H9Z"
+                            stroke="currentColor" stroke-width="2" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section inférieure -->
+    <div class="bottom-section">
+        <!-- Activités récentes -->
+        <div class="activities-section">
+            <div class="section-header">
+                <h2>Activités récentes</h2>
+                <p class="section-subtitle">Dernières actions sur la plateforme</p>
+            </div>
+
+            <div class="activities-list">
+                <div class="activity-item" *ngFor="let activity of activities$ | async">
+                    <div class="activity-indicator" [class.active]="activity.isRecent"></div>
+                    <div class="activity-content">
+                        <p class="activity-text">{{ activity.description }}</p>
+                        <span class="activity-time">{{ activity.time }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="quick-actions-section">
+            <div class="section-header">
+                <h2>Actions rapides</h2>
+                <p class="section-subtitle">Raccourcis d'administration</p>
+            </div>
+
+            <div class="actions-list">
+                <button class="action-button" (click)="ajouterPatient()">
+                    <div class="action-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                                stroke="currentColor" stroke-width="2" />
+                            <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
+                                stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </div>
+                    <span>Ajouter un patient</span>
+                </button>
+
+                <button class="action-button" (click)="verifierMedecin()">
+                    <div class="action-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+                                stroke="currentColor" stroke-width="2" />
+                            <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
+                                stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </div>
+                    <span>Vérifier un médecin</span>
+                </button>
+
+                <button class="action-button" (click)="genererRapport()">
+                    <div class="action-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path
+                                d="M9 12H15M9 16H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z"
+                                stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </div>
+                    <span>Générer un rapport</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

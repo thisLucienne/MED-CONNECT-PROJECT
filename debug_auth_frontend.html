@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Auth Frontend</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Authentification Frontend</h1>
+    
+    <div class="section info">
+        <h3>État du localStorage</h3>
+        <div id="localStorage-status"></div>
+        <button onclick="checkLocalStorage()">Vérifier localStorage</button>
+        <button onclick="clearLocalStorage()">Vider localStorage</button>
+    </div>
+
+    <div class="section">
+        <h3>Test de connexion</h3>
+        <input type="email" id="email" placeholder="Email" value="admin@medconnect.com">
+        <input type="password" id="password" placeholder="Mot de passe" value="Admin123!@#">
+        <button onclick="testLogin()">Tester connexion</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="section">
+        <h3>Test API médecins en attente</h3>
+        <button onclick="testPendingDoctors()">Tester API</button>
+        <div id="api-result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        function checkLocalStorage() {
+            const accessToken = localStorage.getItem('accessToken');
+            const refreshToken = localStorage.getItem('refreshToken');
+            const currentUser = localStorage.getItem('currentUser');
+            
+            const status = document.getElementById('localStorage-status');
+            status.innerHTML = `
+                <pre>
+accessToken: ${accessToken ? 'Présent (' + accessToken.substring(0, 20) + '...)' : 'Absent'}
+refreshToken: ${refreshToken ? 'Présent (' + refreshToken.substring(0, 20) + '...)' : 'Absent'}
+currentUser: ${currentUser || 'Absent'}
+                </pre>
+            `;
+        }
+
+        function clearLocalStorage() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('currentUser');
+            checkLocalStorage();
+            alert('localStorage vidé');
+        }
+
+        async function testLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('login-result');
+            
+            resultDiv.innerHTML = '<p>Connexion en cours...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Sauvegarder les tokens comme le fait Angular
+                    if (data.data.tokens) {
+                        localStorage.setItem('accessToken', data.data.tokens.accessToken);
+                        localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
+                    }
+                    
+                    const user = {
+                        id: data.data.user.id,
+                        email: data.data.user.email,
+                        firstName: data.data.user.firstName,
+                        lastName: data.data.user.lastName,
+                        role: data.data.user.role
+                    };
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ Connexion réussie</h4>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                    checkLocalStorage();
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ Connexion échouée</h4>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Erreur de connexion</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testPendingDoctors() {
+            const resultDiv = document.getElementById('api-result');
+            const token = localStorage.getItem('accessToken');
+            
+            if (!token) {
+                resultDiv.innerHTML = '<div class="error">❌ Aucun token trouvé. Connectez-vous d\'abord.</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>Test de l\'API en cours...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/doctors/pending`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>✅ API réussie</h4>
+                            <p>Médecins en attente: ${data.data?.doctors?.length || 0}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h4>❌ API échouée (${response.status})</h4>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Erreur API</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Vérifier le localStorage au chargement
+        window.onload = function() {
+            checkLocalStorage();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Service Médecins - Intégration</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        .doctor-card { 
+            border: 1px solid #ddd; 
+            padding: 10px; 
+            margin: 5px 0; 
+            border-radius: 5px; 
+            background: #f9f9f9; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🏥 Test Service Médecins - Intégration API</h1>
+    
+    <div class="section info">
+        <h3>Instructions</h3>
+        <p>1. Assurez-vous d'être connecté en tant qu'admin sur http://localhost:4201</p>
+        <p>2. Ouvrez les outils de développement (F12)</p>
+        <p>3. Cliquez sur "Tester Service Médecins" ci-dessous</p>
+        <p>4. Vérifiez les résultats dans la console et sur cette page</p>
+    </div>
+
+    <div class="section">
+        <h3>Test du Service</h3>
+        <button onclick="testMedecinService()">Tester Service Médecins</button>
+        <button onclick="clearResults()">Effacer Résultats</button>
+        <div id="test-results"></div>
+    </div>
+
+    <div class="section">
+        <h3>Liste des Médecins</h3>
+        <div id="doctors-list"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        async function testMedecinService() {
+            const resultsDiv = document.getElementById('test-results');
+            const doctorsDiv = document.getElementById('doctors-list');
+            
+            resultsDiv.innerHTML = '<p>Test en cours...</p>';
+            doctorsDiv.innerHTML = '';
+
+            try {
+                // 1. Vérifier le token
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    throw new Error('Token d\'authentification manquant. Connectez-vous d\'abord sur http://localhost:4201');
+                }
+
+                console.log('🔑 Token trouvé:', token.substring(0, 20) + '...');
+
+                // 2. Tester l'API directement
+                console.log('🔍 Test de l\'API /admin/doctors...');
+                const response = await fetch(`${API_BASE_URL}/admin/doctors?limit=50`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Réponse API:', data);
+
+                if (!data.success) {
+                    throw new Error('API a retourné success: false');
+                }
+
+                // 3. Transformer les données comme le fait le service
+                const doctors = data.data.doctors.map(doctor => ({
+                    id: doctor.id,
+                    nom: doctor.lastName,
+                    prenom: doctor.firstName,
+                    specialite: doctor.specialty,
+                    telephone: doctor.phone || '',
+                    email: doctor.email,
+                    numeroOrdre: doctor.licenseNumber,
+                    dateInscription: new Date(doctor.createdAt).toLocaleDateString('fr-FR'),
+                    statut: mapApiStatusToMedecinStatus(doctor.status),
+                    verified: doctor.status === 'APPROVED'
+                }));
+
+                console.log('🏥 Médecins transformés:', doctors);
+
+                // 4. Afficher les résultats
+                resultsDiv.innerHTML = `
+                    <div class="success">
+                        <h4>✅ Test réussi!</h4>
+                        <p><strong>Total médecins:</strong> ${doctors.length}</p>
+                        <p><strong>Médecins actifs:</strong> ${doctors.filter(d => d.statut === 'actif').length}</p>
+                        <p><strong>Médecins en attente:</strong> ${doctors.filter(d => d.statut === 'en attente').length}</p>
+                        <p><strong>Médecins inactifs:</strong> ${doctors.filter(d => d.statut === 'inactif').length}</p>
+                    </div>
+                `;
+
+                // 5. Afficher la liste des médecins
+                doctorsDiv.innerHTML = doctors.map(doctor => `
+                    <div class="doctor-card">
+                        <h4>Dr. ${doctor.prenom} ${doctor.nom}</h4>
+                        <p><strong>Spécialité:</strong> ${doctor.specialite}</p>
+                        <p><strong>Email:</strong> ${doctor.email}</p>
+                        <p><strong>Téléphone:</strong> ${doctor.telephone || 'N/A'}</p>
+                        <p><strong>Licence:</strong> ${doctor.numeroOrdre}</p>
+                        <p><strong>Statut:</strong> <span style="color: ${getStatusColor(doctor.statut)}">${doctor.statut}</span></p>
+                        <p><strong>Vérifié:</strong> ${doctor.verified ? '✅ Oui' : '❌ Non'}</p>
+                        <p><strong>Inscrit:</strong> ${doctor.dateInscription}</p>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('❌ Erreur:', error);
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Test échoué</h4>
+                        <p><strong>Erreur:</strong> ${error.message}</p>
+                        <p><strong>Solution:</strong> Assurez-vous d'être connecté en tant qu'admin sur http://localhost:4201</p>
+                    </div>
+                `;
+            }
+        }
+
+        function mapApiStatusToMedecinStatus(apiStatus) {
+            switch (apiStatus) {
+                case 'APPROVED':
+                    return 'actif';
+                case 'PENDING':
+                    return 'en attente';
+                case 'REJECTED':
+                case 'BLOCKED':
+                    return 'inactif';
+                default:
+                    return 'en attente';
+            }
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'actif':
+                    return 'green';
+                case 'en attente':
+                    return 'orange';
+                case 'inactif':
+                    return 'red';
+                default:
+                    return 'gray';
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+            document.getElementById('doctors-list').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
