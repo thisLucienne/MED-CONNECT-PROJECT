@@ -257,27 +257,41 @@ class AuthController {
       const userId = req.user?.id;
       const { refreshToken } = req.body;
 
+      // Si l'utilisateur n'est pas authentifié (token expiré/invalide),
+      // on considère la déconnexion comme réussie côté client
       if (!userId) {
-        return res.status(401).json({
-          success: false,
-          error: {
-            code: 'NOT_AUTHENTICATED',
-            message: 'Utilisateur non authentifié'
-          }
+        return res.status(200).json({
+          success: true,
+          message: 'Déconnexion réussie'
         });
       }
 
       const result = await AuthService.logout(userId, refreshToken);
 
       if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: 'LOGOUT_FAILED',
-            message: result.error
-          }
+        // Même en cas d'erreur côté serveur, on considère la déconnexion
+        // comme réussie côté client pour éviter les blocages
+        console.warn('Erreur lors de la déconnexion côté serveur:', result.error);
+        return res.status(200).json({
+          success: true,
+          message: 'Déconnexion réussie'
         });
       }
+
+      res.status(200).json({
+        success: true,
+        message: result.message
+      });
+
+    } catch (error) {
+      console.error('Erreur contrôleur déconnexion:', error);
+      // Même en cas d'erreur, on retourne un succès pour la déconnexion
+      res.status(200).json({
+        success: true,
+        message: 'Déconnexion réussie'
+      });
+    }
+  }
 
       res.status(200).json({
         success: true,
