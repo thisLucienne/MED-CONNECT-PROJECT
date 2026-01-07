@@ -430,4 +430,41 @@ router.get('/verify-token',
   AuthController.verifyToken
 );
 
+/**
+ * @swagger
+ * /api/auth/stats:
+ *   get:
+ *     summary: Obtenir les statistiques de l'utilisateur connecté
+ *     tags: [Authentification]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Statistiques utilisateur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalVisits:
+ *                       type: integer
+ *                     totalReports:
+ *                       type: integer
+ *                     totalMessages:
+ *                       type: integer
+ *                     connectedDoctors:
+ *                       type: integer
+ *       401:
+ *         description: Non authentifié
+ */
+router.get('/stats',
+  authenticateToken,
+  AuthController.getUserStats
+);
+
 module.exports = router;

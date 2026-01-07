@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,51 +7,147 @@ import {
   ScrollView,
   StatusBar,
   SafeAreaView,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
+import dashboardService, { DashboardStats, UserHealthInfo } from '../services/dashboardService';
 
 interface DashboardScreenProps {
-  onNavigateToMessages: () => void;
-  onNavigateToProfile: () => void;
-  onNavigateToRecords: () => void;
-  onNavigateToFindDoctor: () => void;
-  onNavigateToDocument: () => void;
+  onNavigate: (screen: string) => void;
   onLogout: () => void;
-  onNavigateToActivity: () => void;
-  onNavigateToLabResults: () => void;
-  onCreateDocument: () => void;
 }
 
 const DashboardScreen: React.FC<DashboardScreenProps> = ({
-  onNavigateToMessages,
-  onNavigateToProfile,
-  onNavigateToRecords,
-  onNavigateToFindDoctor,
-  onNavigateToActivity,
-  onNavigateToLabResults,
-  onCreateDocument,
+  onNavigate,
   onLogout,
 }) => {
+  const { user, logout } = useAuth();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [healthInfo, setHealthInfo] = useState<UserHealthInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Charger les données du dashboard
+  const loadDashboardData = async (showLoader = true) => {
+    try {
+      if (showLoader) setLoading(true);
+      
+      // Charger les statistiques et les informations de santé en parallèle
+      const [statsResponse, healthResponse] = await Promise.allSettled([
+        dashboardService.getDashboardStats(),
+        dashboardService.getUserHealthInfo()
+      ]);
+
+      if (statsResponse.status === 'fulfilled') {
+        setStats(statsResponse.value.data);
+      }
+
+      if (healthResponse.status === 'fulfilled') {
+        setHealthInfo(healthResponse.value.data);
+      }
+    } catch (error) {
+      console.warn('Erreur lors du chargement du dashboard:', error);
+      // On continue avec les données par défaut en cas d'erreur
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Charger les données au montage du composant
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  // Rafraîchir les données
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadDashboardData(false);
+  };
+
+  // Données par défaut en cas d'erreur de chargement
+  const defaultStats: DashboardStats = {
+    dossiers: { total: 0, nouveaux: 0 },
+    messages: { total: 0, nonLus: 0 },
+    medecins: { total: 0, connectes: 0 },
+    resultatsLabo: { total: 0, recents: 0 }
+  };
+
+  const defaultHealthInfo: UserHealthInfo = {
+    allergies: ['Aucune allergie connue'],
+    medicaments: ['Aucun médicament actuel'],
+    conditions: ['Aucune condition particulière']
+  };
+
+  const currentStats = stats || defaultStats;
+  const currentHealthInfo = healthInfo || defaultHealthInfo;
+
+  const handleLogout = async () => {
+    await logout();
+    onLogout();
+  };
+
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (!firstName || !lastName) return 'U';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3b82f6" />
+          <Text style={styles.loadingText}>Chargement du tableau de bord...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
       
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#3b82f6']}
+            tintColor="#3b82f6"
+          />
+        }
+      >
         {/* Header Bleu */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.userInfo}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>MD</Text>
+                <Text style={styles.avatarText}>
+                  {getInitials(user?.firstName, user?.lastName)}
+                </Text>
               </View>
               <View style={styles.userDetails}>
-                <Text style={styles.userName}>Marie Dubois</Text>
-                <Text style={styles.userId}>34 ans • ID: MD-3647</Text>
+                <Text style={styles.userName}>
+                  {user ? `${user.firstName} ${user.lastName}` : 'Utilisateur'}
+                </Text>
+                <Text style={styles.userId}>
+                  {user?.role === 'PATIENT' ? 'Patient' : user?.role} • ID: {user?.id?.slice(-6) || 'N/A'}
+                </Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.settingsButton} onPress={onNavigateToProfile}>
-              <Ionicons name="settings-outline" size={24} color="white" />
-            </TouchableOpacity>
+            
+            <View style={styles.headerActions}>
+              <TouchableOpacity style={styles.settingsButton} onPress={() => onNavigate('profile')}>
+                <Ionicons name="settings-outline" size={24} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                <Ionicons name="log-out-outline" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -68,10 +164,13 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   <Ionicons name="warning" size={18} color="#f97316" />
                   <Text style={styles.infoTitle}>Allergies</Text>
                   <View style={[styles.badge, styles.badgeOrange]}>
-                    <Text style={styles.badgeText}>2</Text>
+                    <Text style={styles.badgeText}>{currentHealthInfo.allergies.length}</Text>
                   </View>
                 </View>
-                <Text style={styles.infoText}>Pénicilline, Arachides</Text>
+                <Text style={styles.infoText}>
+                  {currentHealthInfo.allergies.slice(0, 2).join(', ')}
+                  {currentHealthInfo.allergies.length > 2 && '...'}
+                </Text>
               </View>
 
               {/* Médicaments */}
@@ -80,10 +179,13 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                   <Ionicons name="medkit" size={18} color="#10b981" />
                   <Text style={styles.infoTitle}>Médicaments</Text>
                   <View style={[styles.badge, styles.badgeGreen]}>
-                    <Text style={styles.badgeText}>3</Text>
+                    <Text style={styles.badgeText}>{currentHealthInfo.medicaments.length}</Text>
                   </View>
                 </View>
-                <Text style={styles.infoText}>Aspirine 100mg, Euthryrox 75μg</Text>
+                <Text style={styles.infoText}>
+                  {currentHealthInfo.medicaments.slice(0, 2).join(', ')}
+                  {currentHealthInfo.medicaments.length > 2 && '...'}
+                </Text>
               </View>
             </View>
 
@@ -93,10 +195,13 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 <Ionicons name="heart" size={18} color="#3b82f6" />
                 <Text style={styles.infoTitle}>Conditions</Text>
                 <View style={[styles.badge, styles.badgeBlue]}>
-                  <Text style={styles.badgeText}>?</Text>
+                  <Text style={styles.badgeText}>{currentHealthInfo.conditions.length}</Text>
                 </View>
               </View>
-              <Text style={styles.infoText}>Hypothyroïdie, Migraine chronique</Text>
+              <Text style={styles.infoText}>
+                {currentHealthInfo.conditions.slice(0, 3).join(', ')}
+                {currentHealthInfo.conditions.length > 3 && '...'}
+              </Text>
             </View>
           </View>
 
@@ -108,12 +213,12 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
               {/* Dossiers médicaux */}
               <TouchableOpacity 
                 style={[styles.quickAccessCard, styles.cardBlue]} 
-                onPress={onNavigateToRecords}
+                onPress={() => onNavigate('medicalRecords')}
               >
                 <View style={styles.cardIconContainer}>
                   <Ionicons name="document-text" size={32} color="#3b82f6" />
                   <View style={[styles.notificationBadge, styles.badgeBlueNotif]}>
-                    <Text style={styles.notificationText}>14</Text>
+                    <Text style={styles.notificationText}>{currentStats.dossiers.total}</Text>
                   </View>
                 </View>
                 <Text style={styles.cardTitle}>Dossiers médicaux</Text>
@@ -122,13 +227,15 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
               {/* Messagerie */}
               <TouchableOpacity 
                 style={[styles.quickAccessCard, styles.cardPurple]} 
-                onPress={onNavigateToMessages}
+                onPress={() => onNavigate('messaging')}
               >
                 <View style={styles.cardIconContainer}>
                   <Ionicons name="chatbubble-ellipses" size={32} color="#8b5cf6" />
-                  <View style={[styles.notificationBadge, styles.badgeRed]}>
-                    <Text style={styles.notificationText}>3</Text>
-                  </View>
+                  {currentStats.messages.nonLus > 0 && (
+                    <View style={[styles.notificationBadge, styles.badgeRed]}>
+                      <Text style={styles.notificationText}>{currentStats.messages.nonLus}</Text>
+                    </View>
+                  )}
                 </View>
                 <Text style={styles.cardTitle}>Messagerie</Text>
               </TouchableOpacity>
@@ -136,24 +243,26 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
               {/* Mes médecins */}
               <TouchableOpacity 
                 style={[styles.quickAccessCard, styles.cardTeal]} 
-                onPress={onNavigateToFindDoctor}
+                onPress={() => onNavigate('findDoctor')}
               >
                 <View style={styles.cardIconContainer}>
                   <Ionicons name="people" size={32} color="#14b8a6" />
                   <View style={[styles.notificationBadge, styles.badgeGray]}>
-                    <Text style={styles.notificationText}>5</Text>
+                    <Text style={styles.notificationText}>{currentStats.medecins.connectes}</Text>
                   </View>
                 </View>
                 <Text style={styles.cardTitle}>Mes médecins</Text>
               </TouchableOpacity>
 
               {/* Résultats labo */}
-              <TouchableOpacity style={[styles.quickAccessCard, styles.cardIndigo]} onPress={onNavigateToLabResults}>
+              <TouchableOpacity style={[styles.quickAccessCard, styles.cardIndigo]} onPress={() => onNavigate('labResults')}>
                 <View style={styles.cardIconContainer}>
                   <Ionicons name="flask" size={32} color="#6366f1" />
-                  <View style={[styles.notificationBadge, styles.badgeBlueNotif]}>
-                    <Text style={styles.notificationText}>?</Text>
-                  </View>
+                  {currentStats.resultatsLabo.recents > 0 && (
+                    <View style={[styles.notificationBadge, styles.badgeBlueNotif]}>
+                      <Text style={styles.notificationText}>{currentStats.resultatsLabo.recents}</Text>
+                    </View>
+                  )}
                 </View>
                 <Text style={styles.cardTitle}>Résultats labo</Text>
               </TouchableOpacity>
@@ -165,7 +274,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       </ScrollView>
 
       {/* Bouton FAB Vert */}
-      <TouchableOpacity style={styles.fab} onPress={onCreateDocument}>
+      <TouchableOpacity style={styles.fab} onPress={() => onNavigate('uploadDocument')}>
         <Ionicons name="add" size={32} color="white" />
       </TouchableOpacity>
 
@@ -176,27 +285,29 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <Text style={[styles.navText, styles.navTextActive]}>Accueil</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem} onPress={onNavigateToRecords}>
+        <TouchableOpacity style={styles.navItem} onPress={() => onNavigate('medicalRecords')}>
           <Ionicons name="document-text-outline" size={26} color="#9ca3af" />
           <Text style={styles.navText}>Dossiers</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem} onPress={onNavigateToMessages}>
+        <TouchableOpacity style={styles.navItem} onPress={() => onNavigate('messaging')}>
           <View style={styles.navIconWrapper}>
             <Ionicons name="chatbubble-outline" size={26} color="#9ca3af" />
-            <View style={styles.navBadge}>
-              <Text style={styles.navBadgeText}>3</Text>
-            </View>
+            {currentStats.messages.nonLus > 0 && (
+              <View style={styles.navBadge}>
+                <Text style={styles.navBadgeText}>{currentStats.messages.nonLus}</Text>
+              </View>
+            )}
           </View>
           <Text style={styles.navText}>Messages</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem} onPress={onNavigateToActivity}>
+        <TouchableOpacity style={styles.navItem} onPress={() => onNavigate('findDoctor')}>
           <Ionicons name="people" size={32} color="#14b8a6" />
           <Text style={styles.navText}>Médecins</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem} onPress={onNavigateToProfile}>
+        <TouchableOpacity style={styles.navItem} onPress={() => onNavigate('profile')}>
           <Ionicons name="person-outline" size={26} color="#9ca3af" />
           <Text style={styles.navText}>Profil</Text>
         </TouchableOpacity>
@@ -254,6 +365,15 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
   },
   settingsButton: {
+    padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  logoutButton: {
     padding: 8,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 8,
@@ -458,6 +578,16 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6b7280',
   },
 });
 

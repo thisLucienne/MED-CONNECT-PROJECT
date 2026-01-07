@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,22 +6,16 @@ import {
   StyleSheet,
   ScrollView,
   StatusBar,
-  SafeAreaView,
   Image,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  TextInput,
+  Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
-interface Doctor {
-  id: string;
-  name: string;
-  specialty: string;
-  location: string;
-  rating: number;
-  reviewCount: number;
-  nextAvailable: string;
-  avatar: string;
-  phone: string;
-}
+import doctorsService, { ConnectedDoctor, Doctor } from '../services/doctorsService';
 
 interface MyDoctorsScreenProps {
   onBack: () => void;
@@ -29,9 +23,10 @@ interface MyDoctorsScreenProps {
   onNavigateToProfile: () => void;
   onNavigateToRecords: () => void;
   onNavigateToActivity: () => void;
-  onDoctorPress: (doctorId: string) => void;
+  onDoctorPress: (doctor: ConnectedDoctor) => void;
   onCallDoctor: (phone: string) => void;
-  onMessageDoctor: (doctorId: string) => void;
+  onMessageDoctor: (doctor: ConnectedDoctor) => void;
+  onShareWithDoctor: (doctor: ConnectedDoctor) => void;
 }
 
 const MyDoctorsScreen: React.FC<MyDoctorsScreenProps> = ({
@@ -43,67 +38,189 @@ const MyDoctorsScreen: React.FC<MyDoctorsScreenProps> = ({
   onDoctorPress,
   onCallDoctor,
   onMessageDoctor,
+  onShareWithDoctor,
 }) => {
-  // Données de démonstration
-  const doctors: Doctor[] = [
-    {
-      id: '1',
-      name: 'Dr. Sophie Martin',
-      specialty: 'Médecin généraliste',
-      location: 'Paris 15ème',
-      rating: 4.8,
-      reviewCount: 127,
-      nextAvailable: 'Demain à 14h30',
-      avatar: 'SM',
-      phone: '+33 1 23 45 67 89',
-    },
-    {
-      id: '2',
-      name: 'Dr. Jean Dupont',
-      specialty: 'Cardiologue',
-      location: 'Paris 8ème',
-      rating: 4.9,
-      reviewCount: 203,
-      nextAvailable: 'Lundi à 09h00',
-      avatar: 'JD',
-      phone: '+33 1 23 45 67 90',
-    },
-    {
-      id: '3',
-      name: 'Dr. Marie Laurent',
-      specialty: 'Dermatologue',
-      location: 'Paris 12ème',
-      rating: 4.7,
-      reviewCount: 89,
-      nextAvailable: 'Mercredi à 16h00',
-      avatar: 'ML',
-      phone: '+33 1 23 45 67 91',
-    },
-    {
-      id: '4',
-      name: 'Dr. Thomas Bernard',
-      specialty: 'Ophtalmologue',
-      location: 'Paris 6ème',
-      rating: 4.6,
-      reviewCount: 156,
-      nextAvailable: 'Vendredi à 11h15',
-      avatar: 'TB',
-      phone: '+33 1 23 45 67 92',
-    },
-    {
-      id: '5',
-      name: 'Dr. Claire Rousseau',
-      specialty: 'Endocrinologue',
-      location: 'Paris 10ème',
-      rating: 4.9,
-      reviewCount: 178,
-      nextAvailable: 'Aujourd\'hui à 17h30',
-      avatar: 'CR',
-      phone: '+33 1 23 45 67 93',
-    },
-  ];
+  const [connectedDoctors, setConnectedDoctors] = useState<ConnectedDoctor[]>([]);
+  const [availableDoctors, setAvailableDoctors] = useState<Doctor[]>([]);
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
+  const [showAddDoctorModal, setShowAddDoctorModal] = useState(false);
+  const [searchResults, setSearchResults] = useState<Doctor[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'connected' | 'available'>('connected');
+  const [stats, setStats] = useState({
+    totalAppointments: 0,
+    upcomingAppointments: 0,
+    completedAppointments: 0,
+  });
 
-  const renderStars = (rating: number) => {
+  // Charger les médecins connectés
+  const loadConnectedDoctors = async (showLoader = true) => {
+    try {
+      if (showLoader) setLoading(true);
+      
+      console.log('🔄 Chargement des médecins connectés...');
+      const response = await doctorsService.getConnectedDoctors();
+      console.log('✅ Médecins connectés chargés:', response.data.length);
+      setConnectedDoctors(response.data);
+      
+      // Calculer les statistiques (pour l'instant, on simule)
+      setStats({
+        totalAppointments: response.data.length * 2, // Simulation
+        upcomingAppointments: 1,
+        completedAppointments: response.data.length * 2 - 1,
+      });
+    } catch (error: any) {
+      console.error('❌ Erreur chargement médecins connectés:', error);
+      Alert.alert('Erreur', 'Erreur lors du chargement des médecins connectés: ' + error.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Charger les médecins disponibles
+  const loadAvailableDoctors = async () => {
+    try {
+      const response = await doctorsService.getAllDoctors(1, 50, selectedSpecialty);
+      setAvailableDoctors(response.data);
+    } catch (error: any) {
+      console.error('Erreur chargement médecins disponibles:', error);
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  // Charger les spécialités
+  const loadSpecialties = async () => {
+    try {
+      console.log('🔄 Chargement des spécialités...');
+      const response = await doctorsService.getSpecialties();
+      console.log('✅ Spécialités chargées:', response.data);
+      setSpecialties(['all', ...response.data]);
+    } catch (error: any) {
+      console.error('❌ Erreur chargement spécialités:', error);
+      Alert.alert('Erreur', 'Erreur lors du chargement des spécialités: ' + error.message);
+    }
+  };
+
+  // Rechercher des médecins
+  const searchDoctors = async (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const response = await doctorsService.searchDoctors(query);
+      setSearchResults(response.data);
+    } catch (error: any) {
+      console.error('Erreur recherche médecins:', error);
+      Alert.alert('Erreur', error.message);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Ajouter un médecin à la liste (envoyer demande de connexion)
+  const addDoctorToList = async (doctor: Doctor) => {
+    try {
+      Alert.alert(
+        'Ajouter un médecin',
+        `Voulez-vous envoyer une demande de connexion au Dr. ${doctor.firstName} ${doctor.lastName} ?`,
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Envoyer',
+            onPress: async () => {
+              try {
+                await doctorsService.sendConnectionRequest(doctor.id);
+                Alert.alert('Succès', 'Demande de connexion envoyée avec succès');
+                setShowAddDoctorModal(false);
+                setSearchQuery('');
+                setSearchResults([]);
+              } catch (error: any) {
+                Alert.alert('Erreur', error.message);
+              }
+            }
+          }
+        ]
+      );
+    } catch (error: any) {
+      Alert.alert('Erreur', error.message);
+    }
+  };
+
+  // Charger les données au montage du composant
+  useEffect(() => {
+    loadConnectedDoctors();
+    loadSpecialties();
+  }, []);
+
+  // Charger les médecins disponibles quand la spécialité change
+  useEffect(() => {
+    if (activeTab === 'available') {
+      loadAvailableDoctors();
+    }
+  }, [selectedSpecialty, activeTab]);
+
+  // Recherche en temps réel
+  useEffect(() => {
+    if (showAddDoctorModal && searchQuery.length >= 2) {
+      const timeoutId = setTimeout(() => {
+        searchDoctors(searchQuery);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery, showAddDoctorModal]);
+
+  // Rafraîchir les données
+  const handleRefresh = () => {
+    setRefreshing(true);
+    if (activeTab === 'connected') {
+      loadConnectedDoctors(false);
+    } else {
+      loadAvailableDoctors();
+      setRefreshing(false);
+    }
+  };
+
+  // Afficher les options pour un médecin
+  const showDoctorOptions = (doctor: ConnectedDoctor) => {
+    Alert.alert(
+      `Dr. ${doctor.firstName} ${doctor.lastName}`,
+      'Que souhaitez-vous faire ?',
+      [
+        {
+          text: 'Appeler',
+          onPress: () => onCallDoctor(doctor.email), // Utiliser email à défaut de téléphone
+        },
+        {
+          text: 'Envoyer un message',
+          onPress: () => onMessageDoctor(doctor),
+        },
+        {
+          text: 'Partager un dossier',
+          onPress: () => onShareWithDoctor(doctor),
+        },
+        {
+          text: 'Voir le profil',
+          onPress: () => onDoctorPress(doctor),
+        },
+        {
+          text: 'Annuler',
+          style: 'cancel',
+        },
+      ]
+    );
+  };
+
+  const renderStars = (rating: number = 4.5) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
@@ -130,6 +247,18 @@ const MyDoctorsScreen: React.FC<MyDoctorsScreenProps> = ({
     return stars;
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3b82f6" />
+          <Text style={styles.loadingText}>Chargement des médecins...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -140,113 +269,341 @@ const MyDoctorsScreen: React.FC<MyDoctorsScreenProps> = ({
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Mes médecins</Text>
-          <Text style={styles.headerSubtitle}>{doctors.length} médecins</Text>
+          <Text style={styles.headerTitle}>Médecins</Text>
+          <Text style={styles.headerSubtitle}>
+            {activeTab === 'connected' 
+              ? `${connectedDoctors.length} connectés` 
+              : `${availableDoctors.length} disponibles`}
+          </Text>
         </View>
-        <TouchableOpacity style={styles.searchButton}>
-          <Ionicons name="search" size={24} color="white" />
+        <TouchableOpacity 
+          style={styles.searchButton}
+          onPress={() => setShowAddDoctorModal(true)}
+        >
+          <Ionicons name="person-add" size={24} color="white" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#3b82f6']}
+            tintColor="#3b82f6"
+          />
+        }
+      >
         {/* Stats Cards */}
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <Ionicons name="calendar" size={24} color="#3b82f6" />
-            <Text style={styles.statNumber}>12</Text>
+            <Text style={styles.statNumber}>{stats.totalAppointments}</Text>
             <Text style={styles.statLabel}>Rendez-vous</Text>
           </View>
           <View style={styles.statCard}>
             <Ionicons name="time" size={24} color="#10b981" />
-            <Text style={styles.statNumber}>1</Text>
+            <Text style={styles.statNumber}>{stats.upcomingAppointments}</Text>
             <Text style={styles.statLabel}>À venir</Text>
           </View>
           <View style={styles.statCard}>
             <Ionicons name="checkmark-circle" size={24} color="#8b5cf6" />
-            <Text style={styles.statNumber}>11</Text>
+            <Text style={styles.statNumber}>{stats.completedAppointments}</Text>
             <Text style={styles.statLabel}>Complétés</Text>
           </View>
         </View>
 
+        {/* Onglets */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'connected' && styles.activeTab]}
+            onPress={() => setActiveTab('connected')}
+          >
+            <Ionicons 
+              name="people" 
+              size={20} 
+              color={activeTab === 'connected' ? '#3b82f6' : '#9ca3af'} 
+            />
+            <Text style={[styles.tabText, activeTab === 'connected' && styles.activeTabText]}>
+              Mes médecins
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'available' && styles.activeTab]}
+            onPress={() => {
+              setActiveTab('available');
+              loadAvailableDoctors();
+            }}
+          >
+            <Ionicons 
+              name="search" 
+              size={20} 
+              color={activeTab === 'available' ? '#3b82f6' : '#9ca3af'} 
+            />
+            <Text style={[styles.tabText, activeTab === 'available' && styles.activeTabText]}>
+              Disponibles
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Filtre par spécialité pour l'onglet disponibles */}
+        {activeTab === 'available' && (
+          <View style={styles.filterContainer}>
+            <Text style={styles.filterLabel}>Spécialité :</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.specialtyScroll}>
+              {specialties.map((specialty) => (
+                <TouchableOpacity
+                  key={specialty}
+                  style={[
+                    styles.specialtyChip,
+                    selectedSpecialty === specialty && styles.selectedSpecialtyChip
+                  ]}
+                  onPress={() => setSelectedSpecialty(specialty)}
+                >
+                  <Text style={[
+                    styles.specialtyChipText,
+                    selectedSpecialty === specialty && styles.selectedSpecialtyChipText
+                  ]}>
+                    {specialty === 'all' ? 'Toutes' : specialty}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {/* Liste des médecins */}
         <View style={styles.doctorsSection}>
-          <Text style={styles.sectionTitle}>Mes praticiens</Text>
+          <Text style={styles.sectionTitle}>
+            {activeTab === 'connected' ? 'Mes praticiens' : 'Médecins disponibles'}
+          </Text>
           
-          {doctors.map((doctor) => (
-            <TouchableOpacity
-              key={doctor.id}
-              style={styles.doctorCard}
-              onPress={() => onDoctorPress(doctor.id)}
-              activeOpacity={0.7}
-            >
-              {/* Avatar et infos principales */}
-              <View style={styles.doctorMainInfo}>
-                <View style={styles.doctorAvatar}>
-                  <Text style={styles.doctorAvatarText}>{doctor.avatar}</Text>
-                </View>
-
-                <View style={styles.doctorDetails}>
-                  <Text style={styles.doctorName}>{doctor.name}</Text>
-                  <Text style={styles.doctorSpecialty}>{doctor.specialty}</Text>
-                  
-                  {/* Note */}
-                  <View style={styles.ratingContainer}>
-                    <View style={styles.stars}>{renderStars(doctor.rating)}</View>
-                    <Text style={styles.ratingText}>
-                      {doctor.rating} ({doctor.reviewCount})
+          {(activeTab === 'connected' ? connectedDoctors : availableDoctors).length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="people-outline" size={64} color="#9ca3af" />
+              <Text style={styles.emptyStateTitle}>
+                {activeTab === 'connected' 
+                  ? 'Aucun médecin connecté' 
+                  : 'Aucun médecin disponible'}
+              </Text>
+              <Text style={styles.emptyStateText}>
+                {activeTab === 'connected'
+                  ? 'Vous n\'avez pas encore de médecins connectés.\nRecherchez et ajoutez des médecins.'
+                  : 'Aucun médecin trouvé pour cette spécialité.\nEssayez un autre filtre.'}
+              </Text>
+            </View>
+          ) : (
+            (activeTab === 'connected' ? connectedDoctors : availableDoctors).map((doctor) => (
+              <TouchableOpacity
+                key={doctor.id}
+                style={styles.doctorCard}
+                onPress={() => activeTab === 'connected' 
+                  ? showDoctorOptions(doctor as ConnectedDoctor) 
+                  : addDoctorToList(doctor)}
+                activeOpacity={0.7}
+              >
+                {/* Avatar et infos principales */}
+                <View style={styles.doctorMainInfo}>
+                  <View style={styles.doctorAvatar}>
+                    <Text style={styles.doctorAvatarText}>
+                      {doctor.firstName.charAt(0)}{doctor.lastName.charAt(0)}
                     </Text>
                   </View>
+
+                  <View style={styles.doctorDetails}>
+                    <Text style={styles.doctorName}>
+                      Dr. {doctor.firstName} {doctor.lastName}
+                    </Text>
+                    <Text style={styles.doctorSpecialty}>
+                      {doctor.specialty || 'Médecin généraliste'}
+                    </Text>
+                    
+                    {/* Note */}
+                    <View style={styles.ratingContainer}>
+                      <View style={styles.stars}>{renderStars(4.5)}</View>
+                      <Text style={styles.ratingText}>4.5 (120)</Text>
+                    </View>
+                  </View>
                 </View>
-              </View>
 
-              {/* Localisation */}
-              <View style={styles.locationContainer}>
-                <Ionicons name="location" size={14} color="#6b7280" />
-                <Text style={styles.locationText}>{doctor.location}</Text>
-              </View>
+                {/* Type d'accès pour les médecins connectés */}
+                {activeTab === 'connected' && 'typeAcces' in doctor && (
+                  <View style={styles.accessContainer}>
+                    <View style={[
+                      styles.accessBadge, 
+                      { backgroundColor: doctor.typeAcces === 'ECRITURE' ? '#3b82f6' : '#10b981' }
+                    ]}>
+                      <Ionicons 
+                        name={doctor.typeAcces === 'ECRITURE' ? 'create' : 'eye'} 
+                        size={12} 
+                        color="white" 
+                      />
+                      <Text style={styles.accessBadgeText}>
+                        {doctor.typeAcces === 'ECRITURE' ? 'Lecture et écriture' : 'Lecture seule'}
+                      </Text>
+                    </View>
+                  </View>
+                )}
 
-              {/* Prochaine disponibilité */}
-              <View style={styles.availabilityContainer}>
-                <Ionicons name="time" size={14} color="#10b981" />
-                <Text style={styles.availabilityText}>
-                  Prochain créneau : {doctor.nextAvailable}
-                </Text>
-              </View>
+                {/* Date de connexion pour les médecins connectés */}
+                {activeTab === 'connected' && 'dateAutorisation' in doctor && (
+                  <View style={styles.availabilityContainer}>
+                    <Ionicons name="link" size={14} color="#10b981" />
+                    <Text style={styles.availabilityText}>
+                      Connecté depuis le {new Date(doctor.dateAutorisation).toLocaleDateString('fr-FR')}
+                    </Text>
+                  </View>
+                )}
 
-              {/* Boutons d'action */}
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.callButton]}
-                  onPress={() => onCallDoctor(doctor.phone)}
-                >
-                  <Ionicons name="call" size={18} color="#3b82f6" />
-                  <Text style={styles.callButtonText}>Appeler</Text>
-                </TouchableOpacity>
+                {/* Boutons d'action */}
+                <View style={styles.actionButtons}>
+                  {activeTab === 'connected' ? (
+                    <>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.callButton]}
+                        onPress={() => onCallDoctor(doctor.email)}
+                      >
+                        <Ionicons name="call" size={18} color="#3b82f6" />
+                        <Text style={styles.callButtonText}>Contact</Text>
+                      </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.messageButton]}
-                  onPress={() => onMessageDoctor(doctor.id)}
-                >
-                  <Ionicons name="chatbubble" size={18} color="white" />
-                  <Text style={styles.messageButtonText}>Message</Text>
-                </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.messageButton]}
+                        onPress={() => onMessageDoctor(doctor as ConnectedDoctor)}
+                      >
+                        <Ionicons name="chatbubble" size={18} color="white" />
+                        <Text style={styles.messageButtonText}>Message</Text>
+                      </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.profileButton]}
-                  onPress={() => onDoctorPress(doctor.id)}
-                >
-                  <Ionicons name="person" size={18} color="#6b7280" />
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-          ))}
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.shareButton]}
+                        onPress={() => onShareWithDoctor(doctor as ConnectedDoctor)}
+                      >
+                        <Ionicons name="share" size={18} color="white" />
+                        <Text style={styles.shareButtonText}>Partager</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.addButton]}
+                      onPress={() => addDoctorToList(doctor)}
+                    >
+                      <Ionicons name="person-add" size={18} color="white" />
+                      <Text style={styles.addButtonText}>Ajouter</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
         </View>
 
         <View style={{ height: 100 }} />
       </ScrollView>
 
+      {/* Modal d'ajout de médecin */}
+      <Modal
+        visible={showAddDoctorModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => {
+                setShowAddDoctorModal(false);
+                setSearchQuery('');
+                setSearchResults([]);
+              }}
+            >
+              <Ionicons name="close" size={24} color="#374151" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Rechercher un médecin</Text>
+            <View style={{ width: 24 }} />
+          </View>
+
+          <View style={styles.modalContent}>
+            {/* Barre de recherche */}
+            <View style={styles.searchContainer}>
+              <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Nom, prénom ou spécialité..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoFocus
+              />
+              {searchLoading && (
+                <ActivityIndicator size="small" color="#3b82f6" style={styles.searchLoader} />
+              )}
+            </View>
+
+            {/* Résultats de recherche */}
+            <ScrollView style={styles.searchResults}>
+              {searchQuery.length < 2 ? (
+                <View style={styles.searchHint}>
+                  <Ionicons name="information-circle-outline" size={48} color="#9ca3af" />
+                  <Text style={styles.searchHintTitle}>Rechercher un médecin</Text>
+                  <Text style={styles.searchHintText}>
+                    Tapez au moins 2 caractères pour commencer la recherche
+                  </Text>
+                </View>
+              ) : searchResults.length === 0 && !searchLoading ? (
+                <View style={styles.searchHint}>
+                  <Ionicons name="search-outline" size={48} color="#9ca3af" />
+                  <Text style={styles.searchHintTitle}>Aucun résultat</Text>
+                  <Text style={styles.searchHintText}>
+                    Aucun médecin trouvé pour "{searchQuery}"
+                  </Text>
+                </View>
+              ) : (
+                searchResults.map((doctor) => (
+                  <TouchableOpacity
+                    key={doctor.id}
+                    style={styles.searchResultItem}
+                    onPress={() => addDoctorToList(doctor)}
+                  >
+                    <View style={styles.searchResultAvatar}>
+                      <Text style={styles.searchResultAvatarText}>
+                        {doctor.firstName.charAt(0)}{doctor.lastName.charAt(0)}
+                      </Text>
+                    </View>
+                    <View style={styles.searchResultInfo}>
+                      <Text style={styles.searchResultName}>
+                        Dr. {doctor.firstName} {doctor.lastName}
+                      </Text>
+                      <Text style={styles.searchResultSpecialty}>
+                        {doctor.specialty || 'Médecin généraliste'}
+                      </Text>
+                      {doctor.licenseNumber && (
+                        <Text style={styles.searchResultLicense}>
+                          N° {doctor.licenseNumber}
+                        </Text>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      style={styles.addDoctorButton}
+                      onPress={() => addDoctorToList(doctor)}
+                    >
+                      <Ionicons name="person-add" size={20} color="#3b82f6" />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      </Modal>
+
       {/* Bouton FAB - Ajouter un médecin */}
-      <TouchableOpacity style={styles.fab}>
+      <TouchableOpacity 
+        style={styles.fab}
+        onPress={() => setShowAddDoctorModal(true)}
+      >
         <Ionicons name="person-add" size={28} color="white" />
       </TouchableOpacity>
 
@@ -290,6 +647,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f3f4f6',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6b7280',
   },
   header: {
     backgroundColor: '#3b82f6',
@@ -371,6 +738,27 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginBottom: 12,
   },
+  emptyState: {
+    alignItems: 'center',
+    padding: 40,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#9ca3af',
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
   doctorCard: {
     backgroundColor: 'white',
     borderRadius: 16,
@@ -427,6 +815,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6b7280',
   },
+  accessContainer: {
+    marginBottom: 8,
+  },
+  accessBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    gap: 4,
+  },
+  accessBadgeText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: '500',
+  },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -482,6 +887,224 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: 'white',
+  },
+  shareButton: {
+    backgroundColor: '#10b981',
+  },
+  shareButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
+  },
+  addButton: {
+    backgroundColor: '#10b981',
+    flex: 1,
+  },
+  addButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    padding: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    gap: 8,
+  },
+  activeTab: {
+    backgroundColor: '#eff6ff',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#9ca3af',
+  },
+  activeTabText: {
+    color: '#3b82f6',
+    fontWeight: '600',
+  },
+  filterContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  filterLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  specialtyScroll: {
+    flexDirection: 'row',
+  },
+  specialtyChip: {
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  selectedSpecialtyChip: {
+    backgroundColor: '#3b82f6',
+    borderColor: '#3b82f6',
+  },
+  specialtyChipText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6b7280',
+  },
+  selectedSpecialtyChipText: {
+    color: 'white',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  modalCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  modalContent: {
+    flex: 1,
+    padding: 16,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#111827',
+  },
+  searchLoader: {
+    marginLeft: 12,
+  },
+  searchResults: {
+    flex: 1,
+  },
+  searchHint: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  searchHintTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  searchHintText: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  searchResultItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  searchResultAvatar: {
+    width: 48,
+    height: 48,
+    backgroundColor: '#dbeafe',
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  searchResultAvatarText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#3b82f6',
+  },
+  searchResultInfo: {
+    flex: 1,
+  },
+  searchResultName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  searchResultSpecialty: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 2,
+  },
+  searchResultLicense: {
+    fontSize: 12,
+    color: '#9ca3af',
+  },
+  addDoctorButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#eff6ff',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
   },
   profileButton: {
     backgroundColor: '#f3f4f6',

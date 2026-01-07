@@ -1,0 +1,464 @@
+<div class="dossiers-globaux-container">
+  <div class="main-layout">
+    <!-- Header principal -->
+    <div class="main-header">
+      <div class="header-content">
+        <div class="header-top">
+          <div class="header-info">
+            <h1>Dossiers Globaux</h1>
+            <p>Accès centralisé aux dossiers médicaux partagés par vos patients connectés.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn-add-document" (click)="openDocumentModal()">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Récupérer/Envoyer Document
+            </button>
+            <div class="inbox-selector">
+              <svg class="inbox-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M3 7V17C3 18.1046 3.89543 19 5 19H19C20.1046 19 21 18.1046 21 17V7M3 7L12 13L21 7M3 7L5 5H19L21 7" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Documents Partagés
+            </div>
+          </div>
+        </div>
+
+        <div class="filters-row">
+          <div class="filter-tabs">
+            <button 
+              class="filter-tab" 
+              [class.active]="activeTab === 'tous'"
+              (click)="setActiveTab('tous')"
+            >
+              Tous <span class="count">({{ getTotalDocuments() }})</span>
+            </button>
+            <button 
+              class="filter-tab" 
+              [class.active]="activeTab === 'nouveau'"
+              (click)="setActiveTab('nouveau')"
+            >
+              Nouveau <span class="count">({{ getNewDocuments() }})</span>
+            </button>
+            <button 
+              class="filter-tab" 
+              [class.active]="activeTab === 'ordonnance'"
+              (click)="setActiveTab('ordonnance')"
+            >
+              Ordonnances <span class="count">({{ getDocumentsByType('ordonnance') }})</span>
+            </button>
+            <button 
+              class="filter-tab" 
+              [class.active]="activeTab === 'resultats-labo'"
+              (click)="setActiveTab('resultats-labo')"
+            >
+              Labo <span class="count">({{ getDocumentsByType('resultats-labo') }})</span>
+            </button>
+            <button 
+              class="filter-tab" 
+              [class.active]="activeTab === 'imagerie'"
+              (click)="setActiveTab('imagerie')"
+            >
+              Imagerie <span class="count">({{ getDocumentsByType('imagerie') }})</span>
+            </button>
+          </div>
+
+          <div class="sort-controls">
+            <label>Trier par :</label>
+            <select class="sort-select" [(ngModel)]="sortBy" (change)="applyFilters()">
+              <option value="plus-recent">Date (plus récent)</option>
+              <option value="plus-ancien">Date (plus ancien)</option>
+              <option value="patient">Patient</option>
+              <option value="type">Type</option>
+            </select>
+            <div class="view-toggle">
+              <button class="active">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M3 6H21M3 12H21M3 18H21" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="main-content">
+      <!-- Barre d'actions pour sélection multiple -->
+      <div class="actions-bar" *ngIf="getSelectedDocuments().length > 0">
+        <div class="selection-info">
+          <span class="selection-count">{{ getSelectedDocuments().length }}</span> documents sélectionnés
+        </div>
+        <div class="bulk-actions">
+          <button class="action-btn">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M7 4V2C7 1.44772 7.44772 1 8 1H16C16.5523 1 17 1.44772 17 2V4H20C20.5523 4 21 4.44772 21 5C21 5.55228 20.5523 6 20 6H19V19C19 20.1046 18.1046 21 17 21H7C5.89543 21 5 20.1046 5 19V6H4C3.44772 6 3 5.55228 3 5C3 4.44772 3.44772 4 4 4H7Z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Marquer lu
+          </button>
+          <button class="action-btn primary">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M8.684 13.342C8.886 12.938 9 12.482 9 12C9 11.518 8.886 11.062 8.684 10.658C8.482 10.254 8.186 9.918 7.828 9.682C7.47 9.446 7.062 9.318 6.644 9.312C6.226 9.306 5.814 9.422 5.45 9.648L3 11.5V12.5L5.45 14.352C5.814 14.578 6.226 14.694 6.644 14.688C7.062 14.682 7.47 14.554 7.828 14.318C8.186 14.082 8.482 13.746 8.684 13.342Z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Partager
+          </button>
+          <button class="action-btn danger">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Supprimer
+          </button>
+        </div>
+      </div>
+
+      <!-- Tableau des documents -->
+      <div class="documents-table-container" *ngIf="getFilteredDocuments().length > 0">
+        <table class="documents-table">
+          <thead>
+            <tr>
+              <th class="checkbox-col">
+                <input 
+                  type="checkbox" 
+                  [checked]="areAllSelected()" 
+                  (change)="toggleSelectAll($event)"
+                >
+              </th>
+              <th class="document-col">DOCUMENT</th>
+              <th class="patient-col">PATIENT</th>
+              <th class="type-col">TYPE</th>
+              <th class="date-col">DATE</th>
+              <th class="status-col">STATUT/TAGS</th>
+              <th class="source-col">SOURCE</th>
+              <th class="actions-col">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr 
+              *ngFor="let document of getFilteredDocuments()" 
+              [class.selected]="document.selected"
+              [class.nouveau]="document.statut === 'nouveau'"
+              (click)="selectDocument(document)"
+            >
+              <td class="checkbox-col">
+                <input 
+                  type="checkbox" 
+                  [checked]="document.selected || false"
+                  (change)="toggleDocumentSelection(document, $event)"
+                  (click)="$event.stopPropagation()"
+                >
+              </td>
+              <td class="document-col">
+                <div class="document-info">
+                  <h4 class="document-title">{{ document.titre }}</h4>
+                  <p class="document-subtitle" *ngIf="document.description">{{ document.description }}</p>
+                </div>
+              </td>
+              <td class="patient-col">
+                <a 
+                  class="patient-link" 
+                  (click)="navigateToPatient(document.patient.id); $event.stopPropagation()"
+                >
+                  {{ document.patient.prenom }} {{ document.patient.nom }}
+                </a>
+              </td>
+              <td class="type-col">
+                <span class="type-badge" [class]="getTypeClass(document.type)">
+                  {{ getTypeLabel(document.type) }}
+                </span>
+              </td>
+              <td class="date-col">
+                <div class="date-info">{{ document.dateModification }}</div>
+              </td>
+              <td class="status-col">
+                <div class="status-badges">
+                  <span class="status-badge" [class]="getStatusClass(document.statut, document.type)">
+                    {{ getStatusLabel(document.statut, document.type) }}
+                  </span>
+                  <span 
+                    class="status-badge" 
+                    [class]="getSecondaryStatusClass(document.type)"
+                    *ngIf="getSecondaryStatusLabel(document.type)"
+                  >
+                    {{ getSecondaryStatusLabel(document.type) }}
+                  </span>
+                </div>
+              </td>
+              <td class="source-col">
+                <div class="source-info">{{ getSourceLabel(document.type) }}</div>
+              </td>
+              <td class="actions-col">
+                <div class="actions-menu">
+                  <button class="actions-btn" (click)="openDocumentActions(document); $event.stopPropagation()">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M12 5V5.01M12 12V12.01M12 19V19.01M12 6C11.4477 6 11 5.55228 11 5C11 4.44772 11.4477 4 12 4C12.5523 4 13 4.44772 13 5C13 5.55228 12.5523 6 12 6ZM12 13C11.4477 13 11 12.5523 11 12C11 11.4477 11.4477 11 12 11C12.5523 11 13 11.4477 13 12C13 12.5523 12.5523 13 12 13ZM12 20C11.4477 20 11 19.5523 11 19C11 18.4477 11.4477 18 12 18C12.5523 18 13 18.4477 13 19C13 19.5523 12.5523 20 12 20Z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="table-footer">
+          <div class="results-info">
+            1 - 10 sur {{ getTotalDocuments() }} documents
+          </div>
+          <div class="pagination-controls">
+            <select class="per-page-select" [(ngModel)]="itemsPerPage">
+              <option value="10">10 par page</option>
+              <option value="25">25 par page</option>
+              <option value="50">50 par page</option>
+            </select>
+            <div class="pagination-buttons">
+              <button [disabled]="currentPage === 1">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </button>
+              <button class="active">1</button>
+              <button>2</button>
+              <button>3</button>
+              <button>
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- État vide -->
+      <div class="empty-state" *ngIf="getFilteredDocuments().length === 0">
+        <div class="empty-content">
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M9 12H15M9 16H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <h3>Aucun document partagé</h3>
+          <p>Vos patients connectés n'ont pas encore partagé de documents avec vous, ou vous n'avez pas encore envoyé de documents.</p>
+          <button class="btn-add-first" (click)="openDocumentModal()">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Récupérer ou envoyer un document
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modales existantes conservées -->
+  <!-- Modal de récupération/envoi de document -->
+  <div class="modal-overlay" *ngIf="showDocumentModal" (click)="closeDocumentModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Récupérer ou Envoyer un Document</h3>
+        <button class="modal-close" (click)="closeDocumentModal()">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <form (ngSubmit)="submitDocumentAction()">
+          <div class="form-group">
+            <label>Action à effectuer *</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input 
+                  type="radio" 
+                  [(ngModel)]="documentAction.type" 
+                  name="actionType" 
+                  value="recuperer"
+                >
+                <span>Récupérer un document partagé par un patient</span>
+              </label>
+              <label class="radio-option">
+                <input 
+                  type="radio" 
+                  [(ngModel)]="documentAction.type" 
+                  name="actionType" 
+                  value="envoyer"
+                >
+                <span>Envoyer un document à un patient</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Patient connecté *</label>
+            <select class="form-select" [(ngModel)]="documentAction.patientId" name="patientId" required>
+              <option value="">Sélectionner un patient connecté</option>
+              <option *ngFor="let patient of patientsConnectes" [value]="patient.id">
+                {{ patient.prenom }} {{ patient.nom }} - {{ getConnectionStatus(patient.id) }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group" *ngIf="documentAction.type === 'recuperer'">
+            <label>Demande d'accès</label>
+            <textarea 
+              class="form-textarea" 
+              [(ngModel)]="documentAction.message" 
+              name="message"
+              placeholder="Expliquez pourquoi vous souhaitez accéder à ce document (ex: suivi médical, consultation urgente...)"
+              rows="3"
+            ></textarea>
+            <small>Le patient recevra cette demande et pourra choisir de partager ses documents.</small>
+          </div>
+
+          <div class="form-group" *ngIf="documentAction.type === 'envoyer'">
+            <label>Titre du document *</label>
+            <input 
+              type="text" 
+              class="form-input" 
+              [(ngModel)]="documentAction.titre" 
+              name="titre"
+              placeholder="Ex: Résultats d'analyse, Ordonnance, Rapport de consultation"
+              [required]="documentAction.type === 'envoyer'"
+            >
+          </div>
+
+          <div class="form-group" *ngIf="documentAction.type === 'envoyer'">
+            <label>Type de document *</label>
+            <select class="form-select" [(ngModel)]="documentAction.typeDocument" name="typeDocument" [required]="documentAction.type === 'envoyer'">
+              <option value="">Sélectionner le type</option>
+              <option value="consultation">Rapport de consultation</option>
+              <option value="resultats-labo">Résultats de laboratoire</option>
+              <option value="imagerie">Imagerie médicale</option>
+              <option value="ordonnance">Ordonnance</option>
+              <option value="vaccin">Certificat de vaccination</option>
+              <option value="bilan">Bilan médical</option>
+            </select>
+          </div>
+
+          <div class="form-group" *ngIf="documentAction.type === 'envoyer'">
+            <label>Description</label>
+            <textarea 
+              class="form-textarea" 
+              [(ngModel)]="documentAction.description" 
+              name="description"
+              placeholder="Description du document à envoyer au patient..."
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="form-group" *ngIf="documentAction.type === 'envoyer'">
+            <label>Fichier à envoyer *</label>
+            <input 
+              type="file" 
+              class="form-input" 
+              (change)="onFileSelected($event)"
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              [required]="documentAction.type === 'envoyer'"
+            >
+            <small>Formats acceptés: PDF, JPG, PNG, DOC, DOCX</small>
+          </div>
+
+          <div class="form-group" *ngIf="documentAction.type === 'envoyer'">
+            <label>Niveau de confidentialité</label>
+            <select class="form-select" [(ngModel)]="documentAction.confidentialite" name="confidentialite">
+              <option value="normal">Normal</option>
+              <option value="confidentiel">Confidentiel</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeDocumentModal()">
+              Annuler
+            </button>
+            <button type="submit" class="btn-primary">
+              {{ documentAction.type === 'recuperer' ? 'Envoyer la demande' : 'Envoyer le document' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de partage -->
+  <div class="modal-overlay" *ngIf="showShareModal" (click)="closeShareModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Partager le document</h3>
+        <button class="modal-close" (click)="closeShareModal()">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <form (ngSubmit)="shareDocument()">
+          <div class="form-group">
+            <label>Partager avec</label>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input 
+                  type="radio" 
+                  [(ngModel)]="shareForm.destinataire" 
+                  name="destinataire" 
+                  value="patient"
+                >
+                <span>Le patient concerné</span>
+              </label>
+              <label class="radio-option">
+                <input 
+                  type="radio" 
+                  [(ngModel)]="shareForm.destinataire" 
+                  name="destinataire" 
+                  value="medecin"
+                >
+                <span>Un autre médecin</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group" *ngIf="shareForm.destinataire === 'medecin'">
+            <label>Sélectionner le médecin</label>
+            <select class="form-select" [(ngModel)]="shareForm.medecinId" name="medecinId">
+              <option value="">Choisir un médecin</option>
+              <option *ngFor="let medecin of medecinsContacts" [value]="medecin.id">
+                {{ medecin.prenom }} {{ medecin.nom }} - {{ medecin.specialite }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group" *ngIf="shareForm.destinataire === 'medecin'">
+            <label class="checkbox-option">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="shareForm.copiePatient" 
+                name="copiePatient"
+              >
+              <span>Envoyer une copie au patient</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label>Message (optionnel)</label>
+            <textarea 
+              class="form-textarea" 
+              [(ngModel)]="shareForm.message" 
+              name="message"
+              placeholder="Ajouter un message personnalisé..."
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" (click)="closeShareModal()">
+              Annuler
+            </button>
+            <button type="submit" class="btn-primary">
+              Partager
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

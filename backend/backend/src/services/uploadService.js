@@ -289,6 +289,53 @@ class UploadService {
       return false;
     }
   }
+
+  /**
+   * Télécharger un fichier depuis Cloudinary
+   * @param {string} url - URL du fichier
+   * @returns {Promise<Object>} Buffer et informations du fichier
+   */
+  static async downloadFile(url) {
+    try {
+      const https = require('https');
+      const http = require('http');
+      
+      return new Promise((resolve, reject) => {
+        const client = url.startsWith('https:') ? https : http;
+        
+        client.get(url, (response) => {
+          if (response.statusCode !== 200) {
+            reject(new Error(`Erreur HTTP: ${response.statusCode}`));
+            return;
+          }
+
+          const chunks = [];
+          response.on('data', (chunk) => chunks.push(chunk));
+          response.on('end', () => {
+            const buffer = Buffer.concat(chunks);
+            resolve({
+              buffer,
+              contentType: response.headers['content-type'] || 'application/octet-stream',
+              contentLength: response.headers['content-length']
+            });
+          });
+          response.on('error', reject);
+        }).on('error', reject);
+      });
+    } catch (error) {
+      console.error('Erreur téléchargement fichier:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Supprimer un fichier (alias pour compatibilité)
+   * @param {string} publicId - Public ID du fichier
+   * @returns {Promise<boolean>} Succès de la suppression
+   */
+  static async deleteFile(publicId) {
+    return await this.deleteMedicalDocument(publicId);
+  }
 }
 
 module.exports = UploadService;

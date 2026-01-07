@@ -115,6 +115,78 @@ class UploadController {
     }
   }
 
+  // Upload photo de profil
+  static async uploadProfilePicture(req, res) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'Aucune image fournie'
+        });
+      }
+
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Utilisateur non authentifié'
+        });
+      }
+
+      // Vérifier que c'est bien une image
+      if (!req.file.mimetype.startsWith('image/')) {
+        return res.status(400).json({
+          success: false,
+          message: 'Le fichier doit être une image'
+        });
+      }
+
+      // Extraire l'ancien public_id si l'utilisateur a déjà une photo
+      let oldPublicId = null;
+      if (req.user.profilePicture) {
+        oldPublicId = UploadService.extractPublicIdFromUrl(req.user.profilePicture);
+      }
+
+      const result = await UploadService.uploadProfilePicture(
+        req.file.buffer,
+        req.user.id,
+        oldPublicId
+      );
+
+      if (result.success) {
+        // Mettre à jour l'URL de la photo de profil dans la base de données
+        const { db } = require('../config/database');
+        const { users } = require('../db/schema');
+        const { eq } = require('drizzle-orm');
+
+        await db
+          .update(users)
+          .set({ 
+            profilePicture: result.data.url,
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, req.user.id));
+
+        res.json({
+          success: true,
+          message: 'Photo de profil mise à jour avec succès',
+          data: { url: result.data.url }
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: result.error
+        });
+      }
+
+    } catch (error) {
+      console.error('Erreur upload photo de profil:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de l\'upload de la photo de profil'
+      });
+    }
+  }
+
   // Supprimer un fichier
   static async deleteFile(req, res) {
     try {

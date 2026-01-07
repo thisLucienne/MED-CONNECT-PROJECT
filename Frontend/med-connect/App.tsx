@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider } from './src/context/AuthContext';
 import SplashScreen from './src/components/SplashScreen';
 import LoginScreen from './src/components/LoginScreen';
 import RegisterScreen from './src/components/RegisterScreen';
@@ -12,6 +14,8 @@ import UploadDocumentScreen from './src/components/UploadDocumentScreen';
 import FindDoctorScreen from './src/components/FindDoctorScreen';
 import DoctorProfileScreen from './src/components/DoctorProfileScreen';
 import ActivityScreen from './src/components/ActivityScreen';
+import CreateMedicalRecordScreen from './src/components/CreateMedicalRecordScreen';
+import MedicalRecordDetailScreen from './src/components/MedicalRecordDetailScreen';
 import LabResultsScreen from './src/components/LabResultsScreen';
 
 type Screen = 
@@ -27,14 +31,20 @@ type Screen =
   | 'findDoctor'
   | 'doctorProfile'
   | 'activity'
+  | 'createMedicalRecord'
+  | 'documentUpload'
+  | 'medicalRecordDetail'
   | 'labResults';
-
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
   const [navigationStack, setNavigationStack] = useState<Screen[]>(['splash']);
+  const [selectedDossierId, setSelectedDossierId] = useState<string>('');
 
-  const navigateTo = (screen: Screen) => {
+  const navigateTo = (screen: Screen, dossierId?: string) => {
+    if (dossierId) {
+      setSelectedDossierId(dossierId);
+    }
     setCurrentScreen(screen);
     setNavigationStack(prev => [...prev, screen]);
   };
@@ -51,160 +61,117 @@ export default function App() {
     }
   };
 
-  // Navigation de remplacement (remplace l'écran actuel au lieu d'empiler)
-  const navigateReplace = (screen: Screen) => {
-    const newStack = [...navigationStack];
-    newStack[newStack.length - 1] = screen;
-    setNavigationStack(newStack);
-    setCurrentScreen(screen);
-  };
-
   const renderScreen = () => {
     switch (currentScreen) {
       case 'splash':
         return <SplashScreen onStart={() => navigateTo('login')} />;
-
       case 'login':
-        return (
-          <LoginScreen 
-            onLogin={() => navigateTo('dashboard')} 
-            onCreateAccount={() => navigateTo('register')}
-          />
-        );
-
+        return <LoginScreen 
+          onLogin={() => navigateTo('dashboard')} 
+          onRegister={() => navigateTo('register')} 
+        />;
       case 'register':
-        return (
-          <RegisterScreen 
-            onRegister={() => navigateTo('dashboard')}
-            onBackToLogin={() => goBack()}
-          />
-        );
-
+        return <RegisterScreen 
+          onRegister={() => navigateTo('dashboard')} 
+          onBackToLogin={() => navigateTo('login')} 
+        />;
       case 'dashboard':
-        return (
-          <DashboardScreen 
-            onNavigateToMessages={() => navigateTo('messaging')}
-            onNavigateToProfile={() => navigateTo('profile')}
-            onNavigateToRecords={() => navigateTo('medicalRecords')}
-            onNavigateToFindDoctor={() => navigateTo('findDoctor')}
-            onLogout={() => navigateTo('login')}
-            onNavigateToDocument={() => navigateTo('uploadDocument')}
-            onNavigateToActivity={() => navigateTo('activity')}
-            onNavigateToLabResults={() => navigateTo('labResults')}
-            onCreateDocument={() => navigateTo('uploadDocument')}
-          />
-        );
-
+        return <DashboardScreen 
+          onNavigate={navigateTo}
+          onLogout={() => navigateTo('login')}
+        />;
       case 'messaging':
-        return (
-          <MessagingList 
-            onOpenChat={() => navigateTo('chat')}
-            onBack={() => goBack()}
-            onNavigateToProfiles={() => navigateTo('profile')}
-            onNavigateToRecords={() => navigateTo('medicalRecords')}
-            onNavigateToActivity={() => navigateTo('activity')}
-          />
-        );
-
+        return <MessagingList 
+          onSelectConversation={(conversation) => navigateTo('chat')}
+          onBack={() => navigateTo('dashboard')}
+          onNavigateToProfiles={() => navigateTo('profile')}
+          onNavigateToRecords={() => navigateTo('medicalRecords')}
+          onNavigateToActivity={() => navigateTo('findDoctor')}
+        />;
       case 'chat':
-        return (
-          <ChatConversation 
-            onBack={() => goBack()}
-          />
-        );
-
+        return <ChatConversation onBack={goBack} />;
       case 'profile':
-        return (
-          <ProfileScreen 
-            onBack={() => goBack()}
-            onLogout={() => navigateTo('login')}
-          />
-        );
-
+        return <ProfileScreen 
+          onBack={() => navigateTo('dashboard')} 
+          onLogout={() => navigateTo('login')}
+          onNavigateHome={() => navigateTo('dashboard')}
+          onNavigateToRecords={() => navigateTo('medicalRecords')}
+          onNavigateToMessages={() => navigateTo('messaging')}
+          onNavigateToFindDoctor={() => navigateTo('findDoctor')}
+        />;
       case 'medicalRecords':
-        return (
-          <MedicalRecordsScreen 
-            onBack={() => goBack()}
-            onOpenRecord={(id) => alert(`Ouvrir dossier ${id}`)}
-            onCreateDocument={() => navigateTo('uploadDocument')}
-            onNavigateHome={() => navigateTo('dashboard')}
-            onNavigateToMessages={() => navigateTo('messaging')}
-            onNavigateToProfile={() => navigateTo('profile')}
-            onNavigateToActivity={() => navigateTo('activity')}
-          />
-        );
-
+        return <MedicalRecordsScreen 
+          onBack={() => navigateTo('dashboard')}
+          onUploadDocument={() => navigateTo('createMedicalRecord')}
+          onOpenRecord={(dossierId) => navigateTo('medicalRecordDetail', dossierId)}
+          onNavigateToMessages={() => navigateTo('messaging')}
+          onNavigateToFindDoctor={() => navigateTo('findDoctor')}
+          onNavigateToProfile={() => navigateTo('profile')}
+        />;
+      case 'createMedicalRecord':
+        return <CreateMedicalRecordScreen 
+          onBack={goBack}
+          onSuccess={() => navigateTo('medicalRecords')}
+        />;
+      case 'documentUpload':
+        return <UploadDocumentScreen 
+          onBack={goBack}
+          onUpload={() => navigateTo('medicalRecordDetail', selectedDossierId)}
+        />;
+      case 'medicalRecordDetail':
+        return <MedicalRecordDetailScreen 
+          dossierId={selectedDossierId}
+          onBack={goBack}
+          onAddDocument={(dossierId) => navigateTo('documentUpload', dossierId)}
+        />;
       case 'uploadDocument':
-        return (
-          <UploadDocumentScreen 
-            onBack={() => goBack()}
-            onUpload={() => {
-              alert('Document enregistré !');
-              navigateTo('medicalRecords');
-            }}
-          />
-        );
-
+        return <UploadDocumentScreen onBack={goBack} />;
       case 'findDoctor':
-        return (
-          <FindDoctorScreen 
-            onBack={() => goBack()}
-            onNavigateToMessages={() => navigateTo('messaging')}
-            onNavigateToProfile={() => navigateTo('profile')}
-            onNavigateToRecords={() => navigateTo('medicalRecords')}
-            onNavigateToActivity={() => navigateTo('activity')}
-            onDoctorPress={(doctorId) => {
-              console.log('Voir médecin:', doctorId);
-              navigateTo('doctorProfile');
-            }}
-            onCallDoctor={(phone) => {
-              alert(`Appel vers ${phone}`);
-            }}
-            onMessageDoctor={(doctorId) => {
-              console.log('Message à:', doctorId);
-              navigateTo('chat');
-            }}
-          />
-        );
-
+        return <FindDoctorScreen 
+          onBack={() => navigateTo('dashboard')}
+          onNavigateToMessages={() => navigateTo('messaging')}
+          onNavigateToProfile={() => navigateTo('profile')}
+          onNavigateToRecords={() => navigateTo('medicalRecords')}
+          onNavigateToActivity={() => navigateTo('activity')}
+          onDoctorPress={(doctor) => navigateTo('doctorProfile')}
+          onCallDoctor={(phone) => console.log('Appel:', phone)}
+          onMessageDoctor={(doctor) => navigateTo('messaging')}
+          onShareWithDoctor={(doctor) => navigateTo('medicalRecords')}
+        />;
       case 'doctorProfile':
-        return (
-          <DoctorProfileScreen 
-            onBack={() => goBack()}
-            onMessage={() => navigateTo('chat')}
-            onCall={() => alert('Appel en cours...')}
-          />
-        );
-
+        return <DoctorProfileScreen onBack={goBack} />;
       case 'activity':
-        return (
-          <ActivityScreen
-             onBack={() => goBack()}
-      onSelectDoctor={(id) => navigateTo('doctorProfile')}
-      onNavigateToMessages={() => navigateTo('messaging')}
-      onNavigateToProfile={() => navigateTo('profile')}
-      onNavigateToRecords={() => navigateTo('medicalRecords')}
-      onNavigateToActivity={() => navigateTo('activity')}
-          />
-        );
-
+        return <ActivityScreen 
+          onBack={() => navigateTo('dashboard')} 
+          onSelectDoctor={(id) => navigateTo('doctorProfile')}
+          onNavigateToMessages={() => navigateTo('messaging')}
+          onNavigateToProfile={() => navigateTo('profile')}
+          onNavigateToRecords={() => navigateTo('medicalRecords')}
+          onNavigateToActivity={() => navigateTo('findDoctor')}
+        />;
       case 'labResults':
-        return (
-          <LabResultsScreen
-            onBack={() => goBack()}
-            onNavigateHome={() => navigateTo('dashboard')}
-            onNavigateToRecords={() => navigateTo('medicalRecords')}
-            onNavigateToMessages={() => navigateTo('messaging')}
-            onNavigateToActivity={() => navigateTo('activity')}
-            onNavigateToProfile={() => navigateTo('profile')}
-          />
-        );
+        return <LabResultsScreen 
+          onBack={() => navigateTo('dashboard')} 
+          onNavigateHome={() => navigateTo('dashboard')}
+          onNavigateToRecords={() => navigateTo('medicalRecords')}
+          onNavigateToMessages={() => navigateTo('messaging')}
+          onNavigateToActivity={() => navigateTo('findDoctor')}
+          onNavigateToProfile={() => navigateTo('profile')}
+        />;
       default:
         return <SplashScreen onStart={() => navigateTo('login')} />;
     }
   };
 
-  return <View style={styles.container}>{renderScreen()}</View>;
+  return (
+    <SafeAreaProvider>
+      <AuthProvider>
+        <View style={styles.container}>
+          {renderScreen()}
+        </View>
+      </AuthProvider>
+    </SafeAreaProvider>
+  );
 }
 
 const styles = StyleSheet.create({

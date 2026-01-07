@@ -344,6 +344,110 @@ class DossierController {
       });
     }
   }
+
+  // Supprimer un dossier médical
+  async supprimerDossier(req, res) {
+    try {
+      const { dossierId } = req.params;
+      const patientId = req.user.id;
+
+      if (req.user.role !== 'PATIENT') {
+        return res.status(403).json({
+          success: false,
+          message: 'Seuls les patients peuvent supprimer leurs dossiers'
+        });
+      }
+
+      await dossierService.supprimerDossier(dossierId, patientId);
+
+      res.json({
+        success: true,
+        message: 'Dossier supprimé avec succès'
+      });
+    } catch (error) {
+      console.error('Erreur lors de la suppression du dossier:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Erreur lors de la suppression du dossier'
+      });
+    }
+  }
+
+  // Télécharger un dossier complet en PDF
+  async telechargerDossier(req, res) {
+    try {
+      const { dossierId } = req.params;
+      const utilisateurId = req.user.id;
+
+      const pdfBuffer = await dossierService.genererPDFDossier(dossierId, utilisateurId);
+
+      // Obtenir les infos du dossier pour le nom du fichier
+      const dossier = await dossierService.obtenirDossierComplet(dossierId, utilisateurId);
+      const fileName = `dossier_${dossier.titre.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement du dossier:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Erreur lors du téléchargement du dossier'
+      });
+    }
+  }
+
+  // Télécharger un document spécifique
+  async telechargerDocument(req, res) {
+    try {
+      const { dossierId, documentId } = req.params;
+      const utilisateurId = req.user.id;
+
+      const documentData = await dossierService.telechargerDocument(dossierId, documentId, utilisateurId);
+
+      res.setHeader('Content-Type', documentData.contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${documentData.fileName}"`);
+      res.setHeader('Content-Length', documentData.buffer.length);
+
+      res.send(documentData.buffer);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement du document:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Erreur lors du téléchargement du document'
+      });
+    }
+  }
+
+  // Obtenir la liste des médecins ayant accès à un dossier
+  async obtenirAccesDossier(req, res) {
+    try {
+      const { dossierId } = req.params;
+      const patientId = req.user.id;
+
+      if (req.user.role !== 'PATIENT') {
+        return res.status(403).json({
+          success: false,
+          message: 'Seuls les patients peuvent voir les accès à leurs dossiers'
+        });
+      }
+
+      const acces = await dossierService.obtenirAccesDossier(dossierId, patientId);
+
+      res.json({
+        success: true,
+        data: acces
+      });
+    } catch (error) {
+      console.error('Erreur lors de la récupération des accès:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Erreur lors de la récupération des accès'
+      });
+    }
+  }
 }
 
 module.exports = new DossierController();

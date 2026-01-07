@@ -1,25 +1,127 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, StatusBar, KeyboardAvoidingView, Platform,} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, StatusBar, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 
 interface LoginScreenProps {
   onLogin: () => void;
-  onCreateAccount: () => void;
+  onRegister: () => void;
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onCreateAccount }) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [show2FA, setShow2FA] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [userId, setUserId] = useState('');
 
-  const handleSubmit = () => {
-    if (email && password) {
-      onLogin();
-    } else {
-      alert('Veuillez remplir tous les champs');
+  const { login, verify2FA } = useAuth();
+
+  const handleSubmit = async () => {
+    if (!email || !password) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await login(email, password);
+      
+      if (response.data.requiresVerification) {
+        // 2FA requis
+        setUserId(response.data.user.id);
+        setShow2FA(true);
+        Alert.alert('Vérification requise', 'Un code de vérification a été envoyé à votre email');
+      } else {
+        // Connexion directe réussie
+        onLogin();
+      }
+    } catch (error: any) {
+      Alert.alert('Erreur de connexion', error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const handle2FASubmit = async () => {
+    if (!twoFactorCode || twoFactorCode.length !== 4) {
+      Alert.alert('Erreur', 'Veuillez saisir le code à 4 chiffres');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await verify2FA(userId, twoFactorCode);
+      onLogin();
+    } catch (error: any) {
+      Alert.alert('Code invalide', error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (show2FA) {
+    return (
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
+        <StatusBar barStyle="dark-content" />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <View style={styles.logo}>
+                <View style={styles.plusVertical} />
+                <View style={styles.plusHorizontal} />
+              </View>
+            </View>
+            <Text style={styles.title}>Vérification</Text>
+            <Text style={styles.subtitle}>
+              Saisissez le code à 4 chiffres envoyé à votre email
+            </Text>
+          </View>
+
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Code de vérification</Text>
+              <View style={styles.inputContainer}>
+                <Ionicons name="shield-checkmark-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="1234"
+                  placeholderTextColor="#9ca3af"
+                  value={twoFactorCode}
+                  onChangeText={setTwoFactorCode}
+                  keyboardType="numeric"
+                  maxLength={4}
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.loginButton, isLoading && styles.buttonDisabled]} 
+              onPress={handle2FASubmit}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.loginButtonText}>Vérifier</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setShow2FA(false)}>
+              <Text style={styles.forgotPassword}>Retour à la connexion</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -107,8 +209,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onCreateAccount }) =
           </View>
 
           {/* Bouton de connexion */}
-          <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>
-            <Text style={styles.loginButtonText}>Se connecter</Text>
+          <TouchableOpacity 
+            style={[styles.loginButton, isLoading && styles.buttonDisabled]} 
+            onPress={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.loginButtonText}>Se connecter</Text>
+            )}
           </TouchableOpacity>
 
           {/* Séparateur */}
@@ -119,7 +229,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, onCreateAccount }) =
           </View>
 
           {/* Créer un compte */}
-          <TouchableOpacity style={styles.createAccountButton} onPress={onCreateAccount}>
+          <TouchableOpacity style={styles.createAccountButton} onPress={onRegister}>
             <Text style={styles.createAccountButtonText}>Créer un compte</Text>
           </TouchableOpacity>
         </View>
@@ -302,6 +412,9 @@ const styles = StyleSheet.create({
     color: '#3b82f6',
     fontSize: 16,
     fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   footer: {
     alignItems: 'center',

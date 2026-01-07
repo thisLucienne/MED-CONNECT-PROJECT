@@ -88,10 +88,13 @@ const authenticateToken = async (req, res, next) => {
       firstName: userData.firstName,
       lastName: userData.lastName,
       phone: userData.phone,
+      dateNaissance: userData.dateNaissance,
       profilePicture: userData.profilePicture,
       role: userData.role,
       status: userData.status,
-      lastConnection: userData.lastConnection
+      isVerified: userData.isVerified,
+      lastConnection: userData.lastConnection,
+      createdAt: userData.createdAt
     };
 
     next();

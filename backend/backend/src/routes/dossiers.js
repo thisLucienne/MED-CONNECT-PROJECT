@@ -387,4 +387,104 @@ router.post('/:dossierId/commentaires', validateCommentaire, dossierController.a
  */
 router.patch('/:dossierId/statut', requireRole(['DOCTOR']), dossierController.mettreAJourStatut);
 
+/**
+ * @swagger
+ * /api/dossiers/{dossierId}:
+ *   delete:
+ *     summary: Supprimer un dossier médical (patients uniquement)
+ *     tags: [Dossiers médicaux]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: dossierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Dossier supprimé avec succès
+ */
+router.delete('/:dossierId', requireRole(['PATIENT']), dossierController.supprimerDossier);
+
+/**
+ * @swagger
+ * /api/dossiers/{dossierId}/download:
+ *   get:
+ *     summary: Télécharger un dossier médical complet en PDF
+ *     tags: [Dossiers médicaux]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: dossierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Fichier PDF du dossier
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ */
+router.get('/:dossierId/download', dossierController.telechargerDossier);
+
+/**
+ * @swagger
+ * /api/dossiers/{dossierId}/documents/{documentId}/download:
+ *   get:
+ *     summary: Télécharger un document spécifique
+ *     tags: [Dossiers médicaux]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: dossierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - in: path
+ *         name: documentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Fichier du document
+ *         content:
+ *           application/octet-stream:
+ *             schema:
+ *               type: string
+ *               format: binary
+ */
+router.get('/:dossierId/documents/:documentId/download', dossierController.telechargerDocument);
+
+/**
+ * @swagger
+ * /api/dossiers/{dossierId}/acces:
+ *   get:
+ *     summary: Obtenir la liste des médecins ayant accès au dossier (patients uniquement)
+ *     tags: [Dossiers médicaux]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: dossierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Liste des accès au dossier
+ */
+router.get('/:dossierId/acces', requireRole(['PATIENT']), dossierController.obtenirAccesDossier);
+
 module.exports = router;

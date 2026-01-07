@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, StatusBar, KeyboardAvoidingView, Platform, } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, StatusBar, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 
 interface RegisterScreenProps {
   onRegister: () => void;
@@ -8,6 +9,7 @@ interface RegisterScreenProps {
 }
 
 const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLogin }) => {
+  const { register } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -17,45 +19,88 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = () => {
-    // Validation
+  const handleSubmit = async () => {
+    // Validation locale
     if (!firstName || !lastName || !email || !phone || !password || !confirmPassword) {
-      alert('Veuillez remplir tous les champs');
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
       return;
     }
 
     if (password !== confirmPassword) {
-      alert('Les mots de passe ne correspondent pas');
+      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
       return;
     }
 
     if (password.length < 8) {
-      alert('Le mot de passe doit contenir au moins 8 caractères');
+      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+
+    // Validation mot de passe (doit correspondre aux exigences du backend)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      Alert.alert(
+        'Mot de passe invalide', 
+        'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial (@$!%*?&)'
+      );
       return;
     }
 
     if (!acceptTerms) {
-      alert('Veuillez accepter les conditions d\'utilisation');
+      Alert.alert('Erreur', 'Veuillez accepter les conditions d\'utilisation');
       return;
     }
 
     // Validation email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      alert('Veuillez entrer une adresse email valide');
+      Alert.alert('Erreur', 'Veuillez entrer une adresse email valide');
       return;
     }
 
-    // Validation téléphone
-    const phoneRegex = /^[\d\s+()-]+$/;
-    if (!phoneRegex.test(phone)) {
-      alert('Veuillez entrer un numéro de téléphone valide');
+    // Validation téléphone (format camerounais)
+    // Supprime tous les espaces et tirets pour la validation
+    const cleanPhone = phone.replace(/[\s\-]/g, '');
+    const phoneRegex = /^6\d{8}$/; // 6 suivi de 8 chiffres = 9 chiffres total
+    if (!phoneRegex.test(cleanPhone)) {
+      Alert.alert('Erreur', 'Veuillez entrer un numéro de téléphone camerounais valide (ex: 676437819)');
       return;
     }
 
-    // Si tout est OK
-    onRegister();
+    // Appel API pour l'inscription
+    setIsLoading(true);
+    try {
+      const userData = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        phone: phone.trim()
+      };
+
+      const response = await register(userData);
+      
+      Alert.alert(
+        'Inscription réussie !', 
+        'Bienvenue sur Med-Connect ! Vous pouvez maintenant accéder à votre tableau de bord.',
+        [
+          {
+            text: 'OK',
+            onPress: () => onRegister()
+          }
+        ]
+      );
+    } catch (error: any) {
+      console.error('Erreur inscription:', error);
+      Alert.alert(
+        'Erreur d\'inscription', 
+        error.message || 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -106,6 +151,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
                   value={firstName}
                   onChangeText={setFirstName}
                   autoCapitalize="words"
+                  autoComplete="given-name"
+                  textContentType="givenName"
                 />
               </View>
               </View>
@@ -121,6 +168,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
                   value={lastName}
                   onChangeText={setLastName}
                   autoCapitalize="words"
+                  autoComplete="family-name"
+                  textContentType="familyName"
                 />
             </View>
           </View>
@@ -139,6 +188,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                autoComplete="email"
+                textContentType="emailAddress"
               />
             </View>
           </View>
@@ -150,11 +201,13 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
               <Ionicons name="call-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="+237 6 12 34 56 78"
+                placeholder="676437819 ou 6 76 43 78 19"
                 placeholderTextColor="#9ca3af"
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
+                autoComplete="tel"
+                textContentType="telephoneNumber"
               />
             </View>
           </View>
@@ -166,12 +219,14 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
               <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
               <TextInput
                 style={[styles.input, { flex: 1 }]}
-                placeholder="Minimum 8 caractères"
+                placeholder="Min 8 caractères + spéciaux"
                 placeholderTextColor="#9ca3af"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                autoComplete="new-password"
+                textContentType="newPassword"
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Ionicons
@@ -182,7 +237,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
               </TouchableOpacity>
             </View>
             <Text style={styles.hint}>
-              Au moins 8 caractères avec majuscules, minuscules et chiffres
+              Au moins 8 caractères avec majuscules, minuscules, chiffres et caractères spéciaux (@$!%*?&)
             </Text>
           </View>
 
@@ -199,6 +254,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
+                autoComplete="new-password"
+                textContentType="newPassword"
               />
               <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                 <Ionicons
@@ -227,8 +284,14 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onRegister, onBackToLog
           </TouchableOpacity>
 
           {/* Bouton d'inscription */}
-          <TouchableOpacity style={styles.registerButton} onPress={handleSubmit}>
-            <Text style={styles.registerButtonText}>Créer mon compte</Text>
+          <TouchableOpacity 
+            style={[styles.registerButton, isLoading && styles.registerButtonDisabled]} 
+            onPress={handleSubmit}
+            disabled={isLoading}
+          >
+            <Text style={styles.registerButtonText}>
+              {isLoading ? 'Inscription en cours...' : 'Créer mon compte'}
+            </Text>
           </TouchableOpacity>
 
           {/* Lien vers connexion */}
@@ -403,6 +466,11 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  registerButtonDisabled: {
+    backgroundColor: '#9ca3af',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   loginLink: {
     flexDirection: 'row',

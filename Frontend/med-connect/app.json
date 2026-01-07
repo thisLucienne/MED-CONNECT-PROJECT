@@ -16,14 +16,23 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.medehub.medconnect"
+      "bundleIdentifier": "com.medehub.medconnect",
+      "infoPlist": {
+        "UIViewControllerBasedStatusBarAppearance": false,
+        "UIStatusBarStyle": "UIStatusBarStyleLightContent"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#3b82f6"
       },
-      "package": "com.medehub.medconnect"
+      "package": "com.medehub.medconnect",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -1,114 +1,160 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, StatusBar, SafeAreaView,} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, StatusBar, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import medicalRecordsService, { MedicalRecord } from '../services/medicalRecordsService';
+import { useAuth } from '../context/AuthContext';
 
 interface MedicalRecordsScreenProps {
   onBack: () => void;
-  onOpenRecord: (id: string) => void;
-  onCreateDocument: () => void;
-  onNavigateHome: () => void;
-  onNavigateToMessages: () => void;
-  onNavigateToProfile: () => void;
-  onNavigateToActivity: () => void;
+  onUploadDocument: () => void;
+  onOpenRecord: (dossierId: string) => void;
+  onNavigateToMessages?: () => void;
+  onNavigateToFindDoctor?: () => void;
+  onNavigateToProfile?: () => void;
 }
 
 interface MedicalRecord {
   id: string;
-  title: string;
-  doctor: string;
-  date: string;
-  type: 'consultation' | 'ordonnance' | 'analyse' | 'imagerie' | 'vaccination';
-  color: string;
-  icon: string;
+  titre: string;
+  type: 'CONSULTATION' | 'URGENCE' | 'SUIVI';
+  statut: 'OUVERT' | 'FERME' | 'EN_COURS';
+  dateCreation: string;
+  dateMiseAJour: string;
+  description?: string;
 }
+
+// Fonction pour mapper les types aux icônes et couleurs
+const getRecordStyle = (type: string) => {
+  switch (type) {
+    case 'CONSULTATION':
+      return { icon: 'document-text', color: '#3b82f6' };
+    case 'URGENCE':
+      return { icon: 'warning', color: '#ef4444' };
+    case 'SUIVI':
+      return { icon: 'heart', color: '#10b981' };
+    default:
+      return { icon: 'document', color: '#6b7280' };
+  }
+};
+
+// Fonction pour formater les dates
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+};
 
 const MedicalRecordsScreen: React.FC<MedicalRecordsScreenProps> = ({ 
   onBack, 
+  onUploadDocument,
   onOpenRecord,
-  onCreateDocument,
-  onNavigateHome,
   onNavigateToMessages,
-  onNavigateToProfile,
-  onNavigateToActivity
+  onNavigateToFindDoctor,
+  onNavigateToProfile
 }) => {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
+  const [records, setRecords] = useState<MedicalRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [totalRecords, setTotalRecords] = useState(0);
 
-  const records: MedicalRecord[] = [
-    {
-      id: '1',
-      title: 'Résultats analyses sanguine',
-      doctor: 'Dr Sophie Martin',
-      date: '28 mars 2024',
-      type: 'analyse',
-      color: '#10b981',
-      icon: 'flask',
-    },
-    {
-      id: '2',
-      title: 'IRM thoracique',
-      doctor: 'Dr Jean Dupont',
-      date: '15 mars 2024',
-      type: 'imagerie',
-      color: '#ec4899',
-      icon: 'scan',
-    },
-    {
-      id: '3',
-      title: 'Ordonnance lévothyrox',
-      doctor: 'Dr Claire Bernard',
-      date: '8 mars 2024',
-      type: 'ordonnance',
-      color: '#8b5cf6',
-      icon: 'medical',
-    },
-    {
-      id: '4',
-      title: 'Vaccin Grippe 19 Rappel',
-      doctor: 'Dr Marie Leblanc',
-      date: '1 mars 2024',
-      type: 'vaccination',
-      color: '#f59e0b',
-      icon: 'bandage',
-    },
-    {
-      id: '5',
-      title: 'Bilan thyroïdien complet',
-      doctor: 'Dr Sophie Martin',
-      date: '22 février 2024',
-      type: 'consultation',
-      color: '#3b82f6',
-      icon: 'document-text',
-    },
-  ];
+  // Charger les dossiers médicaux
+  const loadMedicalRecords = async (showLoader = true) => {
+    try {
+      if (showLoader) setLoading(true);
+      
+      const response = await medicalRecordsService.getMedicalRecords(1, 50);
+      setRecords(response.data.dossiers);
+      setTotalRecords(response.data.total);
+    } catch (error: any) {
+      // Si c'est une erreur d'authentification, afficher un message spécifique
+      if (error.message.includes('Token') || error.message.includes('authentification')) {
+        Alert.alert(
+          'Authentification requise', 
+          'Veuillez vous reconnecter pour accéder à vos dossiers médicaux.',
+          [
+            { text: 'OK', onPress: () => onBack() }
+          ]
+        );
+      } else {
+        Alert.alert('Erreur', error.message);
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Charger les données au montage du composant
+  useEffect(() => {
+    loadMedicalRecords();
+  }, []);
+
+  // Rafraîchir les données
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadMedicalRecords(false);
+  };
+
+  // Filtrer les dossiers selon le type sélectionné
+  const filteredRecords = records.filter(record => {
+    const matchesSearch = record.titre.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter = activeFilter === 'all' || record.type === activeFilter.toUpperCase();
+    return matchesSearch && matchesFilter;
+  });
+
+  // Compter les dossiers par type
+  const getFilterCounts = () => {
+    const counts = {
+      all: records.length,
+      consultation: records.filter(r => r.type === 'CONSULTATION').length,
+      urgence: records.filter(r => r.type === 'URGENCE').length,
+      suivi: records.filter(r => r.type === 'SUIVI').length,
+    };
+    return counts;
+  };
+
+  const filterCounts = getFilterCounts();
 
   const filters = [
-    { id: 'all', label: 'Tous', count: 127 },
-    { id: 'consultation', label: 'Consultation', count: 45 },
-    { id: 'ordonnance', label: 'Ordonnance', count: 32 },
-    { id: 'imagerie', label: 'Imagerie', count: 18 },
+    { id: 'all', label: 'Tous', count: filterCounts.all },
+    { id: 'consultation', label: 'Consultation', count: filterCounts.consultation },
+    { id: 'urgence', label: 'Urgence', count: filterCounts.urgence },
+    { id: 'suivi', label: 'Suivi', count: filterCounts.suivi },
   ];
 
-  const renderRecord = ({ item }: { item: MedicalRecord }) => (
-    <TouchableOpacity 
-      style={styles.recordCard}
-      onPress={() => onOpenRecord(item.id)}
-    >
-      <View style={[styles.recordIcon, { backgroundColor: item.color + '20' }]}>
-        <Ionicons name={item.icon as any} size={24} color={item.color} />
-      </View>
-      
-      <View style={styles.recordContent}>
-        <Text style={styles.recordTitle}>{item.title}</Text>
-        <Text style={styles.recordDoctor}>{item.doctor}</Text>
-        <Text style={styles.recordDate}>{item.date}</Text>
-      </View>
+  const renderRecord = ({ item }: { item: MedicalRecord }) => {
+    const style = getRecordStyle(item.type);
+    
+    return (
+      <TouchableOpacity 
+        style={styles.recordCard}
+        onPress={() => onOpenRecord(item.id)}
+      >
+        <View style={[styles.recordIcon, { backgroundColor: style.color + '20' }]}>
+          <Ionicons name={style.icon as any} size={24} color={style.color} />
+        </View>
+        
+        <View style={styles.recordContent}>
+          <Text style={styles.recordTitle}>{item.titre}</Text>
+          <Text style={styles.recordDoctor}>Type: {item.type}</Text>
+          <Text style={styles.recordDate}>{formatDate(item.dateCreation)}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: item.statut === 'OUVERT' ? '#10b981' : '#6b7280' }]}>
+            <Text style={styles.statusText}>{item.statut}</Text>
+          </View>
+        </View>
 
-      <TouchableOpacity style={styles.recordMenu}>
-        <Ionicons name="ellipsis-vertical" size={20} color="#9ca3af" />
+        <TouchableOpacity style={styles.recordMenu}>
+          <Ionicons name="ellipsis-vertical" size={20} color="#9ca3af" />
+        </TouchableOpacity>
       </TouchableOpacity>
-    </TouchableOpacity>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -185,24 +231,48 @@ const MedicalRecordsScreen: React.FC<MedicalRecordsScreenProps> = ({
       </View>
 
       {/* Records List */}
-      <Text style={styles.sectionTitle}>Hier, 2025</Text>
-      
-      <FlatList
-        data={records}
-        renderItem={renderRecord}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#3b82f6" />
+          <Text style={styles.loadingText}>Chargement des dossiers...</Text>
+        </View>
+      ) : filteredRecords.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="document-outline" size={64} color="#9ca3af" />
+          <Text style={styles.emptyTitle}>Aucun dossier médical</Text>
+          <Text style={styles.emptyText}>
+            {records.length === 0 
+              ? "Vous n'avez pas encore de dossier médical. Créez-en un pour commencer."
+              : "Aucun dossier ne correspond à votre recherche."
+            }
+          </Text>
+        </View>
+      ) : (
+        <>
+          <Text style={styles.sectionTitle}>
+            {filteredRecords.length} dossier{filteredRecords.length > 1 ? 's' : ''} trouvé{filteredRecords.length > 1 ? 's' : ''}
+          </Text>
+          
+          <FlatList
+            data={filteredRecords}
+            renderItem={renderRecord}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+          />
+        </>
+      )}
 
       {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={onCreateDocument}>
+      <TouchableOpacity style={styles.fab} onPress={onUploadDocument}>
         <Ionicons name="add" size={28} color="white" />
       </TouchableOpacity>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={onNavigateHome}>
+        <TouchableOpacity style={styles.navItem} onPress={onBack}>
           <Ionicons name="home" size={24} color="#9ca3af" />
           <Text style={styles.navText}>Accueil</Text>
         </TouchableOpacity>
@@ -211,7 +281,7 @@ const MedicalRecordsScreen: React.FC<MedicalRecordsScreenProps> = ({
           <View>
             <Ionicons name="document-text" size={24} color="#3b82f6" />
             <View style={styles.navBadge}>
-              <Text style={styles.navBadgeText}>5</Text>
+              <Text style={styles.navBadgeText}>{totalRecords}</Text>
             </View>
           </View>
           <Text style={[styles.navText, styles.navTextActive]}>Dossiers</Text>
@@ -227,7 +297,7 @@ const MedicalRecordsScreen: React.FC<MedicalRecordsScreenProps> = ({
            <Text style={styles.navText}>Messages</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navItem} onPress={onNavigateToActivity}>
+        <TouchableOpacity style={styles.navItem} onPress={onNavigateToFindDoctor}>
           <Ionicons name="people" size={32} color="#14b8a6" />
           <Text style={styles.navText}>Médecins</Text>
         </TouchableOpacity>
@@ -381,6 +451,49 @@ const styles = StyleSheet.create({
   recordDate: {
     fontSize: 12,
     color: '#9ca3af',
+    marginBottom: 4,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  statusText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6b7280',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+    paddingHorizontal: 32,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   recordMenu: {
     padding: 8,

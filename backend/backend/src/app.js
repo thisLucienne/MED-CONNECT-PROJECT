@@ -16,6 +16,7 @@ const uploadRoutes = require('./routes/upload');
 const connexionRoutes = require('./routes/connexions');
 const santeRoutes = require('./routes/sante');
 const rendezVousRoutes = require('./routes/rendezVous');
+const medecinRoutes = require('./routes/medecins');
 
 const app = express();
 
@@ -123,6 +124,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/connexions', connexionRoutes);
 app.use('/api/sante', santeRoutes);
 app.use('/api/rendez-vous', rendezVousRoutes);
+app.use('/api/medecins', medecinRoutes);
 
 // Route de base
 app.get('/', (req, res) => {
@@ -145,6 +147,7 @@ app.get('/', (req, res) => {
       connexions: '/api/connexions',
       sante: '/api/sante',
       rendezVous: '/api/rendez-vous',
+      medecins: '/api/medecins',
       health: '/health'
     }
   });

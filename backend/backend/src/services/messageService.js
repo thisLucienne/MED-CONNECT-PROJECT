@@ -1,5 +1,5 @@
 const { db } = require('../config/database');
-const { messages, users, notifications } = require('../db/schema');
+const { messages, users, notifications, doctors } = require('../db/schema');
 const { eq, and, or, desc, asc } = require('drizzle-orm');
 const emailService = require('./emailService');
 
@@ -178,7 +178,24 @@ class MessageService {
         }
       }
 
-      return Object.values(conversationsGroupees);
+      // Formater les conversations pour le frontend
+      const conversationsFormatees = Object.entries(conversationsGroupees).map(([autreUtilisateurId, conversation]) => {
+        const utilisateur = conversation.utilisateur;
+        const dernierMessage = conversation.dernierMessage;
+        
+        return {
+          id: `conv_${utilisateurId}_${autreUtilisateurId}`,
+          participantId: autreUtilisateurId,
+          participantName: `${utilisateur.firstName} ${utilisateur.lastName}`,
+          participantType: utilisateur.role === 'DOCTOR' ? 'doctor' : 'patient',
+          lastMessage: dernierMessage.contenu,
+          lastMessageTime: dernierMessage.dateEnvoi,
+          unreadCount: conversation.messagesNonLus,
+          isActive: true
+        };
+      });
+
+      return conversationsFormatees;
     } catch (error) {
       console.error('Erreur lors de la récupération des conversations:', error);
       throw error;
@@ -207,11 +224,12 @@ class MessageService {
       let query = db
         .select({
           id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
+          prenom: users.firstName,
+          nom: users.lastName,
           profilePicture: users.profilePicture,
-          specialty: doctors.specialty,
-          licenseNumber: doctors.licenseNumber
+          specialite: doctors.specialty,
+          licenseNumber: doctors.licenseNumber,
+          verified: users.status
         })
         .from(users)
         .innerJoin(doctors, eq(users.id, doctors.userId))
@@ -236,7 +254,18 @@ class MessageService {
       }
 
       const medecins = await query.limit(20);
-      return medecins;
+      
+      // Formater les résultats pour le frontend
+      const medecinsFormates = medecins.map(medecin => ({
+        id: medecin.id,
+        prenom: medecin.prenom,
+        nom: medecin.nom,
+        specialite: medecin.specialite,
+        email: '', // Ne pas exposer l'email pour la sécurité
+        verified: medecin.verified === 'APPROVED'
+      }));
+      
+      return medecinsFormates;
     } catch (error) {
       console.error('Erreur lors de la recherche de médecins:', error);
       throw error;

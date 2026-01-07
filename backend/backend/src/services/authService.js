@@ -51,23 +51,24 @@ class AuthService {
         profilePicture: profilePictureUrl,
         role: 'PATIENT',
         status: 'ACTIVE',
-        isActive2FA: true
+        isActive2FA: true,
+        isVerified: false // Le compte n'est pas encore vérifié
       }).returning();
 
       const user = newUser[0];
 
+      // Générer et envoyer le code de vérification pour l'inscription
+      const code2FA = await this.generate2FACode(user.id);
+      
+      if (!code2FA.success) {
+        return {
+          success: false,
+          error: 'Erreur lors de l\'envoi du code de vérification'
+        };
+      }
+
       // Envoyer l'email de bienvenue
       await EmailService.sendWelcomeEmail(user);
-
-      // Générer les tokens
-      const tokens = JWTUtils.generateTokenPair(user);
-
-      // Stocker le refresh token
-      await db.insert(refreshTokens).values({
-        userId: user.id,
-        token: tokens.refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 jours
-      });
 
       return {
         success: true,
@@ -80,9 +81,10 @@ class AuthService {
             phone: user.phone,
             profilePicture: user.profilePicture,
             role: user.role,
-            status: user.status
+            status: user.status,
+            requiresVerification: true
           },
-          tokens
+          message: 'Inscription réussie ! Un code de vérification a été envoyé à votre email.'
         }
       };
 
@@ -149,7 +151,8 @@ class AuthService {
         profilePicture: profilePictureUrl,
         role: 'DOCTOR',
         status: 'PENDING',
-        isActive2FA: true
+        isActive2FA: true,
+        isVerified: false // Le compte n'est pas encore vérifié
       }).returning();
 
       const user = newUser[0];
@@ -331,7 +334,38 @@ class AuthService {
         };
       }
 
-      // Pour les patients et médecins, générer un code 2FA
+      // Si le compte est déjà vérifié, connexion directe
+      if (userData.isVerified) {
+        const tokens = JWTUtils.generateTokenPair(userData);
+        
+        // Stocker le refresh token
+        await db.insert(refreshTokens).values({
+          userId: userData.id,
+          token: tokens.refreshToken,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        });
+
+        return {
+          success: true,
+          data: {
+            user: {
+              id: userData.id,
+              email: userData.email,
+              firstName: userData.firstName,
+              lastName: userData.lastName,
+              phone: userData.phone,
+              profilePicture: userData.profilePicture,
+              role: userData.role,
+              status: userData.status,
+              isVerified: true,
+              lastConnection: new Date()
+            },
+            tokens
+          }
+        };
+      }
+
+      // Pour les comptes non vérifiés, générer un code 2FA
       const code2FA = await this.generate2FACode(userData.id);
       
       if (!code2FA.success) {
@@ -503,6 +537,16 @@ class AuthService {
       }
 
       const userData = user[0];
+
+      // Marquer le compte comme vérifié s'il ne l'était pas déjà
+      if (!userData.isVerified) {
+        await db.update(users)
+          .set({ 
+            isVerified: true,
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, userData.id));
+      }
 
       // Générer les tokens
       const tokens = JWTUtils.generateTokenPair(userData);
@@ -697,6 +741,14 @@ class AuthService {
       if (updateData.phone !== undefined) {
         updateFields.phone = updateData.phone || null;
       }
+      if (updateData.dateNaissance !== undefined) {
+        // Convertir l'objet Date en chaîne au format YYYY-MM-DD
+        if (updateData.dateNaissance instanceof Date) {
+          updateFields.dateNaissance = updateData.dateNaissance.toISOString().split('T')[0];
+        } else {
+          updateFields.dateNaissance = updateData.dateNaissance || null;
+        }
+      }
 
       // Gérer la photo de profil
       if (profilePicture) {
@@ -753,6 +805,7 @@ class AuthService {
             firstName: userData.firstName,
             lastName: userData.lastName,
             phone: userData.phone,
+            dateNaissance: userData.dateNaissance,
             profilePicture: userData.profilePicture,
             role: userData.role,
             status: userData.status,

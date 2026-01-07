@@ -293,23 +293,6 @@ class AuthController {
     }
   }
 
-      res.status(200).json({
-        success: true,
-        message: result.message
-      });
-
-    } catch (error) {
-      console.error('Erreur contrôleur déconnexion:', error);
-      res.status(500).json({
-        success: false,
-        error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Erreur interne du serveur'
-        }
-      });
-    }
-  }
-
   /**
    * Obtenir le profil de l'utilisateur connecté
    * GET /auth/profile
@@ -393,7 +376,8 @@ class AuthController {
       const updateData = {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
-        phone: req.body.phone
+        phone: req.body.phone,
+        dateNaissance: req.body.dateNaissance
       };
       const profilePicture = req.file; // Fichier uploadé via multer
 
@@ -417,6 +401,105 @@ class AuthController {
 
     } catch (error) {
       console.error('Erreur contrôleur mise à jour profil:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Erreur interne du serveur'
+        }
+      });
+    }
+  }
+
+  /**
+   * Obtenir les statistiques de l'utilisateur connecté
+   * GET /auth/stats
+   */
+  static async getUserStats(req, res) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          error: {
+            code: 'NOT_AUTHENTICATED',
+            message: 'Utilisateur non authentifié'
+          }
+        });
+      }
+
+      const userId = req.user.id;
+      const userRole = req.user.role;
+
+      // Importer les schémas nécessaires
+      const { db } = require('../config/database');
+      const { dossiersMedicaux, messages, accesDossiers } = require('../db/schema');
+      const { eq, count, and } = require('drizzle-orm');
+
+      let stats = {
+        totalVisits: 0,
+        totalReports: 0,
+        totalMessages: 0,
+        connectedDoctors: 0
+      };
+
+      if (userRole === 'PATIENT') {
+        // Statistiques pour les patients
+        const [dossiersCount] = await db
+          .select({ count: count() })
+          .from(dossiersMedicaux)
+          .where(eq(dossiersMedicaux.idPatient, userId));
+
+        const [messagesCount] = await db
+          .select({ count: count() })
+          .from(messages)
+          .where(eq(messages.expediteur, userId));
+
+        const [medecinsConnectesCount] = await db
+          .select({ count: count() })
+          .from(accesDossiers)
+          .innerJoin(dossiersMedicaux, eq(accesDossiers.idDossier, dossiersMedicaux.id))
+          .where(and(
+            eq(dossiersMedicaux.idPatient, userId),
+            eq(accesDossiers.statut, 'ACTIF')
+          ));
+
+        stats = {
+          totalVisits: dossiersCount.count || 0,
+          totalReports: dossiersCount.count || 0,
+          totalMessages: messagesCount.count || 0,
+          connectedDoctors: medecinsConnectesCount.count || 0
+        };
+
+      } else if (userRole === 'DOCTOR') {
+        // Statistiques pour les médecins
+        const [patientsCount] = await db
+          .select({ count: count() })
+          .from(accesDossiers)
+          .where(and(
+            eq(accesDossiers.idMedecin, userId),
+            eq(accesDossiers.statut, 'ACTIF')
+          ));
+
+        const [messagesCount] = await db
+          .select({ count: count() })
+          .from(messages)
+          .where(eq(messages.expediteur, userId));
+
+        stats = {
+          totalVisits: patientsCount.count || 0,
+          totalReports: 0, // Les médecins ne créent pas de rapports dans ce contexte
+          totalMessages: messagesCount.count || 0,
+          connectedDoctors: patientsCount.count || 0 // Nombre de patients connectés
+        };
+      }
+
+      res.json({
+        success: true,
+        data: stats
+      });
+
+    } catch (error) {
+      console.error('Erreur contrôleur statistiques utilisateur:', error);
       res.status(500).json({
         success: false,
         error: {

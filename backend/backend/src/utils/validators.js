@@ -159,6 +159,10 @@ const validationSchemas = {
     firstName: customValidators.name.optional(),
     lastName: customValidators.name.optional(),
     phone: customValidators.phone.optional(),
+    dateNaissance: Joi.date().iso().optional().messages({
+      'date.format': 'La date de naissance doit être au format YYYY-MM-DD',
+      'date.base': 'La date de naissance doit être une date valide'
+    }),
     // Le mot de passe et l'email nécessitent une validation séparée
   }),
 
